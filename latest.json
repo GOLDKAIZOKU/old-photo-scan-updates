@@ -1,9 +1,9 @@
 {
- "version": "1.6.0",
+ "version": "1.6.1",
  "minShell": "1.4.0",
- "file": "ui/index-1.6.0.html",
- "sha256": "baff57a58dc4f4e19f9827a4f1d81b303aa208070a948656bd436d350dc6f3a2",
- "signature": "U9IV3yITpONuz3nblXr1lT5ymwVtv/R2sbFfNsFnDhWaocZV20iIIRZezcamY1P7UaB5T0Eg5uG7r3izygpZDw==",
- "notes": "New: Undo and Redo, an Adjust crop window to fix crops by hand and straighten tilted photos, and rotate buttons on the Dates & notes page.",
+ "file": "ui/index-1.6.1.html",
+ "sha256": "b831accfd26e4999819cbf2e87cfd89a9b3552814aa7a89eb6ae8e86e6e26d69",
+ "signature": "pZzuaiI7QDNnKHW1XNFuDLuNl1Q7yEjfngZvrW/CdhmYs5ntQxN0j071Z2BdEj4VAFqOXzhv49KxHLEOCWTmBA==",
+ "notes": "Cleaner crops: photos are snapped to their real edges and straightened, so no thin white lines are left. New 'Snap to photo edges' button in Adjust crop.",
  "date": "2026-10-23"
 }
