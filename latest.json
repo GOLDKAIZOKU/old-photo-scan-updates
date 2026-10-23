@@ -1,0 +1,9 @@
+{
+ "version": "1.4.0",
+ "minShell": "1.4.0",
+ "file": "ui/index-1.4.0.html",
+ "sha256": "1d62481caf557a5a56c6abf0fe2230afbded8aa69f045bcee37ecff5fcc37f9a",
+ "signature": "BUCXi+QJmfMKgypAgfX/CgkLAylHPrSQnsZZ0zYqL5IuU7wXIILYpL50ft9WmnrrUkMtlO0e3eBpXgb+NQjQDw==",
+ "notes": "First version with online updates",
+ "date": "2026-10-23"
+}
