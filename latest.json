@@ -1,9 +1,9 @@
 {
- "version": "1.5.1",
+ "version": "1.6.0",
  "minShell": "1.4.0",
- "file": "ui/index-1.5.1.html",
- "sha256": "2dd32920b54314ac6bf10e7338d66810f1905f36a8af1da40acb620880d3f9a0",
- "signature": "3IkyEMG2Pm7YybebnNvNAOpLvt6Yl39fUrn0I3z48+5kAkAWEGGHUXMI9dxND2TfBYutgzE0QJw/dCQ75ltnDA==",
- "notes": "The app now opens your last album straight away, so Gallery works right after launch.",
+ "file": "ui/index-1.6.0.html",
+ "sha256": "baff57a58dc4f4e19f9827a4f1d81b303aa208070a948656bd436d350dc6f3a2",
+ "signature": "U9IV3yITpONuz3nblXr1lT5ymwVtv/R2sbFfNsFnDhWaocZV20iIIRZezcamY1P7UaB5T0Eg5uG7r3izygpZDw==",
+ "notes": "New: Undo and Redo, an Adjust crop window to fix crops by hand and straighten tilted photos, and rotate buttons on the Dates & notes page.",
  "date": "2026-10-23"
 }
