@@ -1,9 +1,9 @@
 {
- "version": "1.4.2",
+ "version": "1.5.0",
  "minShell": "1.4.0",
- "file": "ui/index-1.4.2.html",
- "sha256": "07d143ce0fe5d738f91395d27523e4781f450b18eef4fc1dc51f4d4715e6fab7",
- "signature": "dvVU72tUuALXvlj4KVgfAv9TIhdO6iu5zDcqivNMb6fhPaxSiI4X5dEl0sO15P2AMVlRLiJkSw8e1fHRY1NoDg==",
- "notes": "Updates now arrive straight away.",
+ "file": "ui/index-1.5.0.html",
+ "sha256": "941a597df8e5609df60a8a2529030fee42ffdedf39bce209ba2adf4b18e53720",
+ "signature": "s+sqAACD/6hHEicCVyn+WlTHD1KLcjQwZ6CNDoxf+xJfVng3s70VEq+xJQQEBs7lH6WyP1GasYhyU4EinkJgCA==",
+ "notes": "New: Gallery to browse your photos, and pick the export location when you export.",
  "date": "2026-10-23"
 }
