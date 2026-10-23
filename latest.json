@@ -1,9 +1,9 @@
 {
- "version": "1.4.0",
+ "version": "1.4.1",
  "minShell": "1.4.0",
- "file": "ui/index-1.4.0.html",
- "sha256": "1d62481caf557a5a56c6abf0fe2230afbded8aa69f045bcee37ecff5fcc37f9a",
- "signature": "BUCXi+QJmfMKgypAgfX/CgkLAylHPrSQnsZZ0zYqL5IuU7wXIILYpL50ft9WmnrrUkMtlO0e3eBpXgb+NQjQDw==",
- "notes": "First version with online updates",
+ "file": "ui/index-1.4.1.html",
+ "sha256": "a32bf0a15c354246bf6e20057e7e96713f19b4d57ea9054e0b7671456eb144ef",
+ "signature": "vf8+yZL+QhOisHlHWAfechPSoN0MCkOP33nkFpnUC0TaI70/77WhsQgIpu4nTKVK0BCxeW3m0kNEFDfa8j55BA==",
+ "notes": "Online updates are now switched on.",
  "date": "2026-10-23"
 }
