@@ -1,9 +1,9 @@
 {
- "version": "1.5.0",
+ "version": "1.5.1",
  "minShell": "1.4.0",
- "file": "ui/index-1.5.0.html",
- "sha256": "941a597df8e5609df60a8a2529030fee42ffdedf39bce209ba2adf4b18e53720",
- "signature": "s+sqAACD/6hHEicCVyn+WlTHD1KLcjQwZ6CNDoxf+xJfVng3s70VEq+xJQQEBs7lH6WyP1GasYhyU4EinkJgCA==",
- "notes": "New: Gallery to browse your photos, and pick the export location when you export.",
+ "file": "ui/index-1.5.1.html",
+ "sha256": "2dd32920b54314ac6bf10e7338d66810f1905f36a8af1da40acb620880d3f9a0",
+ "signature": "3IkyEMG2Pm7YybebnNvNAOpLvt6Yl39fUrn0I3z48+5kAkAWEGGHUXMI9dxND2TfBYutgzE0QJw/dCQ75ltnDA==",
+ "notes": "The app now opens your last album straight away, so Gallery works right after launch.",
  "date": "2026-10-23"
 }
