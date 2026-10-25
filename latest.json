@@ -1,9 +1,9 @@
 {
- "version": "1.6.2",
+ "version": "1.7.0",
  "minShell": "1.4.0",
- "file": "ui/index-1.6.2.html",
- "sha256": "2983840180fe5a6c851115e7cabe1d536241b287d61cfca75c4223b952279db7",
- "signature": "HJR5BpFNY2K13tIVNRwU8fJ3yBVSw2hdKDXjTYLv6oBObdAFpDRa0qsR9GZoBXd/O50rujn9rJO8p3dXlDwNAQ==",
- "notes": "Gallery now shows each photo's size in pixels, and its real size in cm.",
+ "file": "ui/index-1.7.0.html",
+ "sha256": "a36d0b2406dd74de1735936c89f8fd5dcdc2751cf84ac312b70bac0fad02e98c",
+ "signature": "zzOVY2pEXWfsZonbZrgr/BTfzE7w3XEaIHfd2q7MGuTux0SXp4KNcugWJQCU0ZNDlYMFzoqCZzYJsmYMMK/xAg==",
+ "notes": "New: add a scan of the back of each photo. Find it under Back of photo on the Dates & notes page.",
  "date": "2026-10-25"
 }
