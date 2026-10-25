@@ -1,9 +1,9 @@
 {
- "version": "1.6.1",
+ "version": "1.6.2",
  "minShell": "1.4.0",
- "file": "ui/index-1.6.1.html",
- "sha256": "b831accfd26e4999819cbf2e87cfd89a9b3552814aa7a89eb6ae8e86e6e26d69",
- "signature": "pZzuaiI7QDNnKHW1XNFuDLuNl1Q7yEjfngZvrW/CdhmYs5ntQxN0j071Z2BdEj4VAFqOXzhv49KxHLEOCWTmBA==",
- "notes": "Cleaner crops: photos are snapped to their real edges and straightened, so no thin white lines are left. New 'Snap to photo edges' button in Adjust crop.",
- "date": "2026-10-23"
+ "file": "ui/index-1.6.2.html",
+ "sha256": "2983840180fe5a6c851115e7cabe1d536241b287d61cfca75c4223b952279db7",
+ "signature": "HJR5BpFNY2K13tIVNRwU8fJ3yBVSw2hdKDXjTYLv6oBObdAFpDRa0qsR9GZoBXd/O50rujn9rJO8p3dXlDwNAQ==",
+ "notes": "Gallery now shows each photo's size in pixels, and its real size in cm.",
+ "date": "2026-10-25"
 }
