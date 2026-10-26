@@ -1,9 +1,9 @@
 {
- "version": "1.9.3",
+ "version": "1.9.4",
  "minShell": "1.4.0",
- "file": "ui/index-1.9.3.html",
- "sha256": "74697deb3982f198e99181442c99e31b25d190a18b6187ad4e14532cb5efccdd",
- "signature": "s6HftFOHX7LFxQs0BxjGMKZezcpHyx1k+lbriGgXrHwt5hh689CZVcJXq6CbSnH61OquFzaagKWOLy0edzjTBA==",
- "notes": "Better detection on grey-background scans (passports, documents): touching items are split",
+ "file": "ui/index-1.9.4.html",
+ "sha256": "8363e99217236873f20a926dbd2819688d2e837975918296401be61dc889c487",
+ "signature": "v2+n6rxU1lgofp4BOYZpP57lyrn6ngij0Nb5Lj5dP0eZvA62IXr0NHPq8vh7yhP5kG7QHLhTDYgudEOikwnfAg==",
+ "notes": "Gallery: Backs filter finds photos that look like the back of a print; mark any photo as a back",
  "date": "2026-10-26"
 }
