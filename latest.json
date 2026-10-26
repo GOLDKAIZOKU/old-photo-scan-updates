@@ -1,9 +1,9 @@
 {
- "version": "1.7.0",
+ "version": "1.7.1",
  "minShell": "1.4.0",
- "file": "ui/index-1.7.0.html",
- "sha256": "a36d0b2406dd74de1735936c89f8fd5dcdc2751cf84ac312b70bac0fad02e98c",
- "signature": "zzOVY2pEXWfsZonbZrgr/BTfzE7w3XEaIHfd2q7MGuTux0SXp4KNcugWJQCU0ZNDlYMFzoqCZzYJsmYMMK/xAg==",
- "notes": "New: add a scan of the back of each photo. Find it under Back of photo on the Dates & notes page.",
- "date": "2026-10-25"
+ "file": "ui/index-1.7.1.html",
+ "sha256": "9876d3b659c291c15cc1537ef2f5c7a2e95adc243c01daefe662f6ff8a4b5efc",
+ "signature": "XSSOSIQbzhnS6zATlwCr/UQhk6S4BNCAPvIWTy1ZCfmwv3qv3y0212gh1IOoKy2N3V+9TUAKvKKN6af7iEsXCQ==",
+ "notes": "Export now sorts Cropped Photos into a folder for each year (or decade). Choose this in the Export window.",
+ "date": "2026-10-26"
 }
