@@ -1,9 +1,9 @@
 {
- "version": "1.9.1",
+ "version": "1.9.2",
  "minShell": "1.4.0",
- "file": "ui/index-1.9.1.html",
- "sha256": "88ba84f1b9cb3db16be25e246ef5e0187d0dd1d8e0f846c91af43cdb5e249fc7",
- "signature": "cVg2NydvZ1eLcmKKo9WhwED9l2zt4YSivf28oRB+qz1i0USVCSmkuSFiDiiOyczgMM4qW0zAT/ZKLf62FkQAAA==",
- "notes": "Gallery: pick two photos and the app guesses which is the back; quicker pairing",
+ "file": "ui/index-1.9.2.html",
+ "sha256": "cfdbc1778ce08d86a0d4340bc7e0acd2fa1e31beecc78a5d95ba05547ca4f109",
+ "signature": "vdOS11/2nMmUrWWldV/pkBUW8Myh/eL59z6bMx9xZW7EC0bCJ2/m/F/UXZz9g1ecU1pIHnkLA4KmvCtMUlwnAg==",
+ "notes": "Photos with a back: Gallery shows the back peeking out; opening shows front and back one above the other",
  "date": "2026-10-26"
 }
