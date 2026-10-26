@@ -1,9 +1,9 @@
 {
- "version": "2.1.0",
+ "version": "2.2.0",
  "minShell": "1.4.0",
- "file": "ui/index-2.1.0.html",
- "sha256": "6429cdb931bda77e15034b2dc5c3a78e28f528ea6bd56700edf61badca2cdd9d",
- "signature": "SfqGNWPam2/BPt2vFaMDIBNZ5hTf0tqFsazm5sgzlsoWNgtp4ha/sRYKYoWXDXPQ3e03wNdgiYRHpURJjxEiBA==",
- "notes": "Gallery: right-click a photo to show it in Finder or open it (needs app 1.5)",
+ "file": "ui/index-2.2.0.html",
+ "sha256": "69bfb20b60b20d24cdc46d22ab4a32dcd198f788ecd050a18447920e5d017e56",
+ "signature": "vIF2GumD1ejpKDPm62eszpqYabpJ1pqi6LzrMGV0+GsDpU4c5YRKsPsRhwJdJ1vL8kKKpHBFWPWh2q7A9wxJDA==",
+ "notes": "Faces: click a face to see its photo; × to take it out; Undo; Scan all again; photos without scans are scanned too",
  "date": "2026-10-26"
 }
