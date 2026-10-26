@@ -1,9 +1,9 @@
 {
- "version": "1.9.0",
+ "version": "1.9.1",
  "minShell": "1.4.0",
- "file": "ui/index-1.9.0.html",
- "sha256": "d7e54588c9095b757976641c5be73d45d5acc276289ed062d3615cee0b27964c",
- "signature": "mrdAU1Vt854YC/MtpMbIFrWWMXjCWFnAxprVKgvMT6EPJXui2/e5UEqjuMTxGGMmtw9E0Fhef7WPfXMIdjpqCw==",
- "notes": "Gallery: Select two photos and join them as front and back (and separate them again)",
+ "file": "ui/index-1.9.1.html",
+ "sha256": "88ba84f1b9cb3db16be25e246ef5e0187d0dd1d8e0f846c91af43cdb5e249fc7",
+ "signature": "cVg2NydvZ1eLcmKKo9WhwED9l2zt4YSivf28oRB+qz1i0USVCSmkuSFiDiiOyczgMM4qW0zAT/ZKLf62FkQAAA==",
+ "notes": "Gallery: pick two photos and the app guesses which is the back; quicker pairing",
  "date": "2026-10-26"
 }
