@@ -1,9 +1,9 @@
 {
- "version": "1.8.1",
+ "version": "1.9.0",
  "minShell": "1.4.0",
- "file": "ui/index-1.8.1.html",
- "sha256": "51326d78f6276eb24376f58ece92514cc35c1834534645d6db1a177345a07ca5",
- "signature": "ywgu9MItscs1qstx9uBgZ3xIqxUIKWIUal0djJ3iuchAhshMYF1C8q4RzvlMzd7JIM4YjDIlphUWAATyjIb5Cg==",
- "notes": "Gallery timeline: drag the bar on the right to jump to any year",
+ "file": "ui/index-1.9.0.html",
+ "sha256": "d7e54588c9095b757976641c5be73d45d5acc276289ed062d3615cee0b27964c",
+ "signature": "mrdAU1Vt854YC/MtpMbIFrWWMXjCWFnAxprVKgvMT6EPJXui2/e5UEqjuMTxGGMmtw9E0Fhef7WPfXMIdjpqCw==",
+ "notes": "Gallery: Select two photos and join them as front and back (and separate them again)",
  "date": "2026-10-26"
 }
