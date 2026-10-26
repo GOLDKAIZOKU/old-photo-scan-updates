@@ -1,9 +1,9 @@
 {
- "version": "1.9.6",
+ "version": "2.0.0",
  "minShell": "1.4.0",
- "file": "ui/index-1.9.6.html",
- "sha256": "cc8e74a642e3145db478674f38e031f85ab8023263597c0071dfc0649884fb4b",
- "signature": "KokyGtenCfhgcrmNSc+5dkKhwRERXQe1GQBIlFDiMuiGmVldI6LcFKGVrmg+HHr5jmFuubwaZ0gu6Y0C2/6ECw==",
- "notes": "Finds pale photo backs on the white scanner glass",
+ "file": "ui/index-2.0.0.html",
+ "sha256": "e1edd7dac5f847316fb1ad965d914f58abcedb6a3bdbd5e307ba5bbd2acd1a35",
+ "signature": "du1+ugeFZtxnMlA3ucJWnYFleICdPLg0GRut24xrG/8ZowMMRJyvbk21Kl8PZqsR7MV/pfoaDTcx52k2ARwuCw==",
+ "notes": "Faster export: only new or changed photos are written; no second hidden copy of photos whose scans were removed",
  "date": "2026-10-26"
 }
