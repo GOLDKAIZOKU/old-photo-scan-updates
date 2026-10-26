@@ -1,9 +1,9 @@
 {
- "version": "1.9.5",
+ "version": "1.9.6",
  "minShell": "1.4.0",
- "file": "ui/index-1.9.5.html",
- "sha256": "8c1234eee465956334b498e885700fe72e9bffd462adbcd27ad4f2c53653807d",
- "signature": "AT4TL68zqjwV0UTymyPmGQsDawjumcOWkJhW537A+nMnQnB+7gADZlk8cSjidPltiNUiW2RzD8HVUpi04IJkCA==",
- "notes": "Gallery: sort by newest or oldest scans",
+ "file": "ui/index-1.9.6.html",
+ "sha256": "cc8e74a642e3145db478674f38e031f85ab8023263597c0071dfc0649884fb4b",
+ "signature": "KokyGtenCfhgcrmNSc+5dkKhwRERXQe1GQBIlFDiMuiGmVldI6LcFKGVrmg+HHr5jmFuubwaZ0gu6Y0C2/6ECw==",
+ "notes": "Finds pale photo backs on the white scanner glass",
  "date": "2026-10-26"
 }
