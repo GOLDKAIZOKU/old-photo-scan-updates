@@ -1,0 +1,1918 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="ui-version" content="1.8.1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Old Photo Scan</title>
+<style>
+:root{
+  --paper:#e6eae4;      /* album linen */
+  --sheet:#f7f8f5;      /* panels */
+  --ink:#1f2622;
+  --muted:#68716b;
+  --line:#cfd6ce;
+  --act:#23574e;        /* deep album green: actions */
+  --stamp:#ff7a1a;      /* camera date-stamp orange */
+  --warn:#a8661a;
+  --sel:#2563c9;
+  --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",sans-serif;
+  --digits:"DIN Condensed","Avenir Next Condensed","Bahnschrift","Arial Narrow",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);font:14px/1.5 var(--font)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--sheet);color:var(--ink);border-radius:6px;padding:6px 12px}
+button:hover{border-color:#a9b3aa}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--sel);outline-offset:1px}
+button.primary{background:var(--act);border-color:var(--act);color:#fff}
+button.primary:hover{filter:brightness(1.12)}
+button:disabled{opacity:.4;cursor:default}
+input,textarea{font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+
+/* header */
+header{display:flex;align-items:center;gap:20px;padding:0 18px;height:56px;background:var(--sheet);border-bottom:1px solid var(--line)}
+header h1{font-size:17px;margin:0;font-weight:700;letter-spacing:1px;white-space:nowrap}
+#steps{display:flex;gap:2px;margin:0 auto}
+#steps button{border:none;background:none;border-radius:0;padding:17px 14px 15px;border-bottom:3px solid transparent;color:var(--muted)}
+#steps button b{display:inline-flex;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center;font-size:12px;margin-right:6px;background:var(--line);color:var(--ink)}
+#steps button.on{color:var(--ink);border-bottom-color:var(--act);font-weight:600}
+#steps button.on b{background:var(--act);color:#fff}
+#saveState{font-size:12px;color:var(--muted);white-space:nowrap}
+
+main{height:calc(100% - 56px);position:relative}
+.view{position:absolute;inset:0;display:none}
+.view.on{display:grid}
+
+/* empty / opening */
+#welcome{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;z-index:3;background:var(--paper)}
+#welcome h2{font-size:22px;margin:0}
+#welcome p{margin:0;color:var(--muted);max-width:30em}
+
+/* ---------- step 1: cutting ---------- */
+#v1{grid-template-columns:190px 1fr 300px}
+#list{border-right:1px solid var(--line);overflow:auto;padding:8px;background:var(--sheet)}
+.scan-item{display:flex;gap:8px;align-items:center;padding:6px;border-radius:6px;cursor:pointer;margin-bottom:2px}
+.scan-item:hover{background:#eceee9}
+.scan-item.active{background:#dfe8e3}
+.scan-item img{width:40px;height:56px;object-fit:cover;border:1px solid var(--line);background:#fff}
+.scan-item .ct{font-size:13px}
+.scan-item .sub{font-size:12px;color:var(--muted)}
+.ok{color:var(--act)} .chk{color:var(--warn)}
+#stage{display:flex;flex-direction:column;overflow:hidden}
+.bar{display:flex;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.bar .hint{color:var(--muted);font-size:12px;margin-left:auto}
+#canvasWrap{flex:1;position:relative;overflow:hidden}
+#scanCanvas{position:absolute;background:#fff;box-shadow:0 1px 8px rgba(30,40,35,.18)}
+#overlay{position:absolute;touch-action:none}
+#side{border-left:1px solid var(--line);overflow:auto;background:var(--sheet);padding:10px}
+.crop{border:1px solid var(--line);border-radius:6px;padding:8px;margin-bottom:8px;background:#fff;cursor:pointer}
+.crop.selected{border-color:var(--sel);box-shadow:0 0 0 2px rgba(37,99,201,.18)}
+.crop .row{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:12px}
+.crop .num{font-weight:700;width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;display:inline-flex;align-items:center;justify-content:center}
+.crop .tools{margin-left:auto;display:flex;gap:4px}
+.crop .tools button{padding:1px 8px}
+.crop canvas{display:block;max-width:100%;max-height:200px;margin:0 auto}
+
+/* ---------- step 2: dates & notes ---------- */
+#v2{grid-template-columns:1fr 340px;grid-template-rows:1fr 112px}
+#photoArea{display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden;min-height:0}
+.print{position:relative;background:#fff;padding:10px;box-shadow:0 2px 10px rgba(30,40,35,.22);max-width:100%;max-height:100%;display:flex}
+.print canvas{display:block;max-width:100%;max-height:calc(100vh - 56px - 112px - 68px);width:auto;height:auto}
+.stampmark{position:absolute;right:26px;bottom:20px;font-family:var(--digits);font-size:30px;line-height:1;letter-spacing:3px;color:var(--stamp);
+  text-shadow:0 0 6px rgba(255,122,26,.65),0 0 1px #ffb27a;pointer-events:none;font-variant-numeric:tabular-nums;white-space:pre}
+.stampmark small{font-family:var(--font);font-size:16px;letter-spacing:0;margin-right:4px;vertical-align:4px}
+.stampmark.empty{display:none}
+#editor{grid-row:1/3;grid-column:2;background:var(--sheet);border-left:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:14px;overflow:auto}
+#editor .pos{color:var(--muted);font-size:13px}
+#editor label{display:block;font-weight:600;margin-bottom:6px}
+#dateIn{font-size:18px;letter-spacing:1px}
+#dateHelp{font-size:12px;color:var(--muted);margin-top:6px}
+#dateSrc{font-size:12px;margin-top:4px}
+#dateSrc.guess{color:var(--warn)} #dateSrc.stamp{color:var(--act)}
+#noteIn{min-height:150px;resize:vertical}
+#editor .nav{display:flex;gap:8px;margin-top:auto}
+#editor .nav button{flex:1}
+#editor .people{font-size:13px;color:var(--muted)}
+#aiBox{border-top:1px solid var(--line);padding-top:14px}
+#aiBox .row{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px}
+#aiBox input[type=range]{flex:1;padding:0}
+#aiBox .hint{font-size:12px;color:var(--muted);margin-top:6px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:none;border-radius:0;padding:4px 12px}
+.seg button.on{background:var(--act);color:#fff}
+#aiProg{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:8px}
+#aiProg i{display:block;height:100%;width:0;background:var(--act)}
+#film{grid-column:1;display:flex;gap:8px;overflow-x:auto;padding:10px 14px;border-top:1px solid var(--line);background:#dde2db;align-items:center}
+.thumb{position:relative;flex:none;height:88px;background:#fff;padding:4px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.thumb img{height:80px;display:block}
+.thumb.on{outline:3px solid var(--act);outline-offset:1px}
+.thumb .y{position:absolute;right:6px;bottom:4px;font-family:var(--digits);font-size:13px;color:var(--stamp);text-shadow:0 0 3px rgba(255,122,26,.8)}
+.thumb .n{position:absolute;left:6px;top:5px;width:8px;height:8px;border-radius:50%;background:var(--act);box-shadow:0 0 0 2px #fff}
+
+/* ---------- step 3: people ---------- */
+#v3{grid-template-rows:auto 1fr;overflow:hidden}
+#v3 .bar{background:var(--sheet)}
+#peopleList{overflow:auto;padding:16px 20px 40px}
+/* gallery */
+#steps .gal{margin-left:14px;border-left:1px solid var(--line)}
+#v4{grid-template-rows:auto 1fr;overflow:hidden}
+#v4 .bar{background:var(--sheet);gap:10px}
+.chips{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.chips button{border:none;border-radius:0;padding:5px 12px;font-size:13px}
+.chips button+button{border-left:1px solid var(--line)}
+.chips button.on{background:var(--act);color:#fff}
+#galPerson,#galSearch{width:auto;padding:5px 8px;font-size:13px}
+#galSearch{width:200px}
+#galCount{font-size:13px;color:var(--muted);margin-left:auto}
+#galWrap{display:grid;grid-template-columns:1fr 70px;min-height:0;position:relative}
+#galScroll{overflow:auto;padding:8px 28px 60px;scrollbar-width:none}
+#galScroll::-webkit-scrollbar{display:none}
+#galRail{position:relative;margin:10px 0;cursor:ns-resize;user-select:none;touch-action:none;border-left:1px solid rgba(0,0,0,.08)}
+#galRail:focus-visible{outline:2px solid var(--sel);outline-offset:-2px}
+#galTicks{position:absolute;inset:0}
+#galTicks span{position:absolute;right:10px;transform:translateY(-50%);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none}
+#galTicks span.dec{font-size:13px;font-weight:700;color:var(--ink,#1d2420)}
+#galTicks span::after{content:"";display:inline-block;width:6px;height:1px;background:currentColor;margin-left:5px;vertical-align:middle;opacity:.6}
+#galThumb{position:absolute;left:-3px;width:5px;height:34px;border-radius:3px;background:var(--act);opacity:.75;transform:translateY(-50%);pointer-events:none}
+#galBubble{position:absolute;right:76px;transform:translateY(-50%);background:var(--act);color:#fff;font-size:15px;font-weight:700;padding:5px 11px;border-radius:14px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;box-shadow:0 2px 8px rgba(0,0,0,.25);z-index:3}
+#galRail.drag #galBubble,#galRail:hover #galBubble{opacity:1}
+.gp.yearmark::before{content:attr(data-year);position:absolute;left:0;top:-17px;font-size:12px;font-weight:600;color:var(--muted)}
+.decade{display:flex;align-items:baseline;gap:12px;margin:26px 0 14px}
+.decade h2{font-size:26px;margin:0;font-weight:700;letter-spacing:.5px}
+.decade span{color:var(--muted);font-size:13px}
+.galgrid{display:flex;flex-wrap:wrap;gap:22px 20px;align-items:flex-end}
+.gp{position:relative;background:#fff;padding:7px 7px 9px;box-shadow:0 1px 4px rgba(30,40,35,.22);cursor:pointer;border:none;border-radius:0;font:inherit;color:inherit;transition:transform .12s ease}
+.gp:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(30,40,35,.25)}
+.gp:focus-visible{outline:3px solid var(--sel);outline-offset:2px}
+.gp img{display:block;height:170px;min-width:90px;background:#e9ece6}
+.gp .y{position:absolute;right:14px;bottom:15px;font-family:var(--digits);font-size:16px;color:var(--stamp);text-shadow:0 0 4px rgba(255,122,26,.8)}
+.gp .tags{position:absolute;left:12px;top:12px;display:flex;gap:4px}
+.gp .tags i{font-style:normal;font-size:11px;line-height:1;padding:3px 6px;border-radius:9px;background:rgba(255,255,255,.92);color:var(--act);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.gp .px{font-size:11px;color:var(--muted);margin-top:4px;text-align:left;font-variant-numeric:tabular-nums}
+.gp .px b{font-weight:600;color:var(--act)}
+#lbSize .v{font-size:13px;font-variant-numeric:tabular-nums}
+.gp .cap{max-width:100%;font-size:12px;color:var(--muted);margin-top:6px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.galempty{padding:60px 0;text-align:center;color:var(--muted)}
+#lightbox{position:fixed;inset:0;background:rgba(18,22,20,.92);display:none;z-index:8;grid-template-columns:1fr 340px}
+#lightbox.on{display:grid}
+#lbStage{position:relative;display:flex;align-items:center;justify-content:center;padding:30px 70px;min-width:0;min-height:0}
+#lbStage .print{max-height:100%}
+#lbStage canvas{max-width:100%;max-height:calc(100vh - 80px)}
+.lbnav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:none;background:rgba(255,255,255,.14);color:#fff;font-size:22px}
+.lbnav:hover{background:rgba(255,255,255,.26)}
+#lbPrev{left:14px} #lbNext{right:14px}
+#lbSide{background:var(--sheet);padding:20px;overflow:auto;display:flex;flex-direction:column;gap:14px}
+#lbSide .k{font-size:12px;color:var(--muted);margin-bottom:2px}
+#lbSide .v{font-size:15px;white-space:pre-wrap;word-break:break-word}
+#lbDate{font-family:var(--digits);font-size:24px;color:var(--stamp)}
+#lbSide .top{display:flex;justify-content:space-between;align-items:center}
+#lbSide .acts{margin-top:auto;display:flex;gap:8px}
+#lbForm input,#lbForm textarea{width:100%;box-sizing:border-box;font:inherit;font-size:15px;padding:7px 9px;border:1px solid var(--line,#ccc);border-radius:8px;background:var(--paper,#fff);color:inherit}
+#lbForm .acts{margin-top:10px;justify-content:flex-end}
+#lbSide .acts button{flex:1}
+@media (prefers-reduced-motion:reduce){ .gp{transition:none} .gp:hover{transform:none} }
+.person{display:grid;grid-template-columns:210px 1fr;gap:16px;align-items:start;padding:14px 0;border-bottom:1px solid var(--line)}
+.person .who input{font-size:16px;font-weight:600}
+.person .who .meta{font-size:12px;color:var(--muted);margin-top:6px}
+.person .who .sugg{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+.person .who .sugg button{font-size:12px;padding:2px 8px;border-color:var(--act);color:var(--act)}
+.faces{display:flex;flex-wrap:wrap;gap:6px}
+.face{position:relative;width:64px;height:64px;border-radius:4px;overflow:hidden;background:#ccc;cursor:pointer}
+.face img{width:100%;height:100%;object-fit:cover;display:block}
+.face:hover::after{content:"Not them";position:absolute;inset:0;background:rgba(160,40,30,.55);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px}
+.more{font-size:12px;color:var(--muted);align-self:center}
+details.singles{margin-top:20px}
+details.singles summary{cursor:pointer;color:var(--muted)}
+.person.named .who input{border-color:var(--act)}
+#faceStatus{font-size:13px;color:var(--muted)}
+
+#folderPanel{position:fixed;inset:0;background:rgba(25,35,30,.45);display:none;align-items:center;justify-content:center;z-index:8}
+#folderPanel.on{display:flex}
+#folderPanel .box{background:var(--sheet);border-radius:10px;padding:22px 24px;width:min(620px,92vw);max-height:86vh;overflow:auto;box-shadow:0 8px 30px rgba(0,0,0,.2)}
+#folderPanel h2{font-size:18px;margin:0 0 14px}
+#folderPanel h3{font-size:14px;margin:18px 0 8px}
+#folderPanel .desc{font-size:12px;color:var(--muted);margin:0 0 8px}
+.frow{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;margin-bottom:6px}
+.frow .p{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:rtl;text-align:left}
+.frow .tag{font-size:11px;color:var(--act);border:1px solid var(--act);border-radius:9px;padding:0 6px;white-space:nowrap}
+.frow .miss{font-size:11px;color:#b3261e;white-space:nowrap}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+#folderPanel .close{float:right}
+#cropEd{position:fixed;inset:0;background:rgba(18,22,20,.94);display:none;z-index:9;grid-template-columns:1fr 320px}
+#cropEd.on{display:grid}
+#ceMain{position:relative;overflow:hidden;min-width:0}
+#ceCanvas,#ceSvg{position:absolute}
+#ceSvg{touch-action:none}
+#ceSide{background:var(--sheet);padding:18px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+#ceSide h2{font-size:18px;margin:0}
+#ceSide .desc{font-size:12px;color:var(--muted);margin:0}
+#ceSide .k{font-size:12px;font-weight:600;margin-top:6px}
+#ceSide .row{display:flex;gap:8px;align-items:center}
+#ceSide input[type=range]{flex:1;padding:0}
+#ceTiltV{font-size:12px;width:44px;text-align:right;font-variant-numeric:tabular-nums}
+#ceOut{display:block;max-width:100%;max-height:300px;margin:0 auto;background:#fff;padding:6px;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+#ceSide .go{display:flex;gap:8px;margin-top:auto;padding-top:10px}
+#ceSide .go .sp{flex:1}
+#editor .fix{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:13px}
+#editor .fix button{padding:4px 10px}
+.stale{color:var(--warn)}
+#backBox{border-top:1px solid var(--line);padding-top:12px}
+#backBox .hint{font-size:12px;color:var(--muted);margin-top:6px}
+#backBox .btns2{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+#backBox .btns2 button{padding:4px 10px}
+#backThumb{display:block;max-width:100%;max-height:120px;background:#fff;padding:4px;box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:pointer}
+#sideRow{display:flex;align-items:center;gap:8px;font-size:13px}
+#backPick{position:fixed;inset:0;background:rgba(18,22,20,.92);display:none;z-index:9;align-items:center;justify-content:center}
+#backPick.on{display:flex}
+#backPick .box{background:var(--sheet);border-radius:10px;padding:18px;max-width:94vw;max-height:94vh;display:flex;flex-direction:column;gap:10px}
+#backPick h2{font-size:17px;margin:0}
+#backPick .desc{font-size:12px;color:var(--muted);margin:0}
+#bpStage{position:relative;align-self:center}
+#bpStage canvas{display:block;max-width:80vw;max-height:72vh}
+#bpStage svg{position:absolute;inset:0}
+#backPick .go{display:flex;gap:8px;justify-content:flex-end}
+#exportDlg{position:fixed;inset:0;background:rgba(25,35,30,.45);display:none;align-items:center;justify-content:center;z-index:8}
+#exportDlg.on{display:flex}
+#exportDlg .box{background:var(--sheet);border-radius:10px;padding:22px 24px;width:min(560px,92vw);box-shadow:0 8px 30px rgba(0,0,0,.2)}
+#exportDlg h2{font-size:18px;margin:0 0 6px}
+#exportDlg .desc{font-size:13px;color:var(--muted);margin:0 0 12px}
+#exportDlg .go{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+#updBar{display:none;align-items:center;gap:12px;padding:8px 18px;background:#fff6dc;border-bottom:1px solid #ecd9a4;font-size:13px}
+#updBar.on{display:flex}
+#updBar .sp{flex:1}
+#verLine{font-size:12px;color:var(--muted);margin-top:18px;display:flex;gap:10px;align-items:center}
+#progress{position:fixed;inset:0;background:rgba(25,35,30,.45);display:none;align-items:center;justify-content:center;z-index:9}
+#progress .box{background:var(--sheet);padding:20px 26px;border-radius:8px;min-width:340px}
+#progress .track{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:10px}
+#progress .track i{display:block;height:100%;background:var(--act);width:0}
+kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:3px;padding:0 4px;font-size:11px;background:#fff}
+@media (prefers-reduced-motion:no-preference){ .stampmark{transition:opacity .2s} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Old Photo Scan</h1>
+  <nav id="steps">
+    <button data-v="1"><b>1</b>Crop</button>
+    <button data-v="2"><b>2</b>Dates &amp; notes</button>
+    <button data-v="3"><b>3</b>People</button>
+    <button data-v="4" class="gal">Gallery</button>
+  </nav>
+  <span id="saveState"></span>
+  <button id="folderBtn" hidden>Folders</button>
+  <button id="exportBtn" class="primary" disabled>Export</button>
+</header>
+<div id="updBar" role="status"><span id="updText"></span><span class="sp"></span><button id="updLater">Later</button><button id="updGo" class="primary">Restart now</button></div>
+<main>
+  <div id="welcome">
+    <h2>Open the folder with your scans</h2>
+    <p>Cropped photos, dates, notes and people are saved back into this folder automatically.</p>
+    <button id="openBtn" class="primary">Open folder</button>
+    <button id="lastBtn" hidden></button>
+  </div>
+
+  <!-- step 1 -->
+  <section class="view" id="v1">
+    <div id="list"></div>
+    <div id="stage">
+      <div class="bar">
+        <button id="prevBtn">Previous scan</button>
+        <button id="nextBtn">Next scan</button>
+        <button id="undoBtn" title="Undo the last crop or rotate change">↶ Undo</button>
+        <button id="redo2Btn" title="Redo">↷ Redo</button>
+        <button id="redoBtn">Re-detect this scan</button>
+        <span class="hint">Drag a box to move it, drag a corner to resize, drag on empty space for a new box. Select one, then <kbd>Delete</kbd> to remove or <kbd>R</kbd> to rotate.</span>
+      </div>
+      <div id="canvasWrap"><canvas id="scanCanvas"></canvas><svg id="overlay"></svg></div>
+    </div>
+    <div id="side"><div id="crops"></div></div>
+  </section>
+
+  <!-- step 2 -->
+  <section class="view" id="v2">
+    <div id="photoArea"><div class="print"><canvas id="bigCanvas"></canvas><div class="stampmark" id="stampmark"></div></div></div>
+    <aside id="editor">
+      <div class="pos" id="pos"></div>
+      <div id="sideRow" hidden><span>Show</span><span class="seg"><button id="sideFront" class="on">Front</button><button id="sideBack">Back</button></span></div>
+      <div class="fix"><button id="pRotL" title="Rotate left" aria-label="Rotate left">⟲</button><button id="pRotR" title="Rotate right" aria-label="Rotate right">⟳</button><button id="pAdjust">Adjust crop…</button><button id="pUndo" title="Undo the last crop or rotate change">↶ Undo</button></div>
+      <div>
+        <label for="dateIn">Date</label>
+        <input id="dateIn" autocomplete="off" placeholder="e.g. 1992-07-12 or c. 1965">
+        <div id="dateSrc"></div>
+        <div id="dateHelp">Not sure? Put “c.” in front. A year on its own is fine.</div>
+      </div>
+      <div>
+        <label for="noteIn">Notes</label>
+        <textarea id="noteIn" placeholder="Writing on the back, the place, who is in it…"></textarea>
+      </div>
+      <div class="people" id="photoPeople"></div>
+      <div id="backBox">
+        <label>Back of photo</label>
+        <div id="backNone">
+          <div class="btns2"><button id="backAdd">Add back scan…</button><button id="backSame" hidden>From the same back scan</button></div>
+          <div class="hint">Scan the back of the photo and pick the file. The app finds the photo on the scan and crops it.</div>
+        </div>
+        <div id="backHas" hidden>
+          <img id="backThumb" alt="Back of the photo" title="Show the back">
+          <div class="btns2"><button id="backRotL" title="Rotate the back left" aria-label="Rotate the back left">⟲</button><button id="backRotR" title="Rotate the back right" aria-label="Rotate the back right">⟳</button><button id="backReplace">Replace…</button><button id="backRemove">Remove</button></div>
+        </div>
+      </div>
+      <div id="aiBox" hidden>
+        <label>AI restore</label>
+        <button id="aiBtn" class="primary">Make this photo sharper</button>
+        <div class="row"><span>Face restore strength</span><input type="range" id="aiStrength" min="0" max="100" step="5" value="70" aria-label="Face restore strength"><span id="aiStrengthV">70%</span></div>
+        <div class="row" id="aiViewRow" hidden><span>Show</span><span class="seg"><button id="aiShowOrig">Original</button><button id="aiShowNew" class="on">Restored</button></span></div>
+        <div id="aiProg" hidden><i></i></div>
+        <div class="hint" id="aiMsg">The photo is enlarged and de-grained, and faces are redrawn. Lower strength stays closer to the original. The original is never changed.</div>
+      </div>
+      <div class="nav"><button id="pPrev">Previous</button><button id="pNext" class="primary">Next</button></div>
+      <div style="font-size:12px;color:var(--muted)">In the notes box, <kbd>⌘</kbd>+<kbd>Enter</kbd> goes to the next photo</div>
+    </aside>
+    <div id="film"></div>
+  </section>
+
+  <!-- step 3 -->
+  <section class="view" id="v3">
+    <div class="bar">
+      <button id="faceBtn" class="primary">Find all faces</button>
+      <span id="faceStatus"></span>
+      <span class="hint">Name each group. If one person is split into two groups (young and old), give both the same name and they merge. Click a face to take it out of a group.</span>
+    </div>
+    <div id="peopleList"></div>
+  </section>
+
+  <!-- gallery -->
+  <section class="view" id="v4">
+    <div class="bar">
+      <span class="chips" id="galFilter" role="group" aria-label="Show">
+        <button data-f="all" class="on">All</button><button data-f="edited">Edited</button><button data-f="restored">AI restored</button><button data-f="notes">With notes</button><button data-f="back">With back</button>
+      </span>
+      <select id="galPerson" aria-label="Person"><option value="">Everyone</option></select>
+      <input id="galSearch" type="search" placeholder="Search notes" aria-label="Search notes">
+      <span id="galCount"></span>
+    </div>
+    <div id="galWrap"><div id="galScroll"></div>
+      <div id="galRail" aria-label="Timeline: drag to jump to a year" role="slider" tabindex="0"><div id="galTicks"></div><i id="galThumb"></i><b id="galBubble"></b></div></div>
+  </section>
+</main>
+<div id="cropEd" role="dialog" aria-modal="true" aria-labelledby="ceTitle">
+  <div id="ceMain"><canvas id="ceCanvas"></canvas><svg id="ceSvg"></svg></div>
+  <aside id="ceSide">
+    <h2 id="ceTitle">Adjust crop</h2>
+    <p class="desc">Drag an edge or corner to change the crop. Drag inside the box to move it. The thick edge is the top of the photo.</p>
+    <div class="k">Straighten</div>
+    <div class="row"><input type="range" id="ceTilt" min="-20" max="20" step="0.1" aria-label="Straighten"><span id="ceTiltV"></span><button id="ceTilt0" title="Set tilt to 0°">0°</button></div>
+    <div class="row"><button id="ceSnap" title="Move the crop onto the photo's own edges and straighten it">Snap to photo edges</button></div>
+    <div class="k">Turn</div>
+    <div class="row"><button id="ceL">⟲ Left</button><button id="ceR">⟳ Right</button></div>
+    <div class="k">Result</div>
+    <canvas id="ceOut"></canvas>
+    <div class="go"><button id="ceUndo">↶ Undo</button><span class="sp"></span><button id="ceCancel">Cancel</button><button id="ceDone" class="primary">Done</button></div>
+  </aside>
+</div>
+<div id="backPick" role="dialog" aria-modal="true" aria-labelledby="bpTitle"><div class="box">
+  <h2 id="bpTitle">Which one is the back of this photo?</h2>
+  <p class="desc">Click the photo on the back scan that belongs to this photo.</p>
+  <div id="bpStage"><canvas id="bpCanvas"></canvas><svg id="bpSvg"></svg></div>
+  <div class="go"><button id="bpWhole">Use the whole scan</button><span style="flex:1"></span><button id="bpCancel">Cancel</button></div>
+</div></div>
+<div id="exportDlg" role="dialog" aria-modal="true" aria-labelledby="exTitle"><div class="box">
+  <h2 id="exTitle">Export</h2>
+  <p class="desc">Cropped Photos, By Person and Photo List will be saved in:</p>
+  <div id="exWhere"></div>
+  <div class="btns"><button id="exChange">Change…</button><button id="exReset">Back to original (main folder)</button></div>
+  <p class="desc" style="margin-top:16px">Sort Cropped Photos into folders by:</p>
+  <span class="chips" id="exLayout" role="group" aria-label="Sort Cropped Photos by"><button data-l="year">Year</button><button data-l="decade">Decade</button><button data-l="flat">One folder</button></span>
+  <div class="go"><button id="exCancel">Cancel</button><button id="exGo" class="primary">Export here</button></div>
+</div></div>
+<div id="lightbox" role="dialog" aria-modal="true" aria-label="Photo">
+  <div id="lbStage"><div class="print"><canvas id="lbCanvas"></canvas></div>
+    <button class="lbnav" id="lbPrev" aria-label="Previous photo">‹</button><button class="lbnav" id="lbNext" aria-label="Next photo">›</button></div>
+  <aside id="lbSide">
+    <div class="top"><span id="lbPos" class="k"></span><button id="lbClose">Close</button></div>
+    <div id="lbSideRow" hidden><span class="seg"><button id="lbFront" class="on">Front</button><button id="lbBack">Back</button></span></div>
+    <div id="lbView" hidden><span class="seg"><button id="lbOrig">Original</button><button id="lbNew" class="on">Restored</button></span></div>
+    <div><div class="k">Date</div><div id="lbDate"></div><div id="lbDateSrc" class="k"></div></div>
+    <div><div class="k">Notes</div><div id="lbNote" class="v"></div></div>
+    <div><div class="k">People</div><div id="lbPeople" class="v"></div></div>
+    <div id="lbSize"><div class="k">Size</div><div class="v" id="lbSizeV"></div></div>
+    <div><div class="k">From</div><div id="lbFrom" class="v" style="font-size:13px"></div></div>
+    <div id="lbForm" hidden><div class="k">Date</div><input id="lbDateIn" placeholder="e.g. 1987-11 or c. 1960">
+      <div class="k" style="margin-top:8px">Notes</div><textarea id="lbNoteIn" rows="4"></textarea>
+      <div class="acts"><button id="lbCancel">Cancel</button><button id="lbSave" class="primary">Save</button></div></div>
+    <div class="acts"><button id="lbEdit" class="primary">Edit date &amp; notes</button></div>
+  </aside>
+</div>
+<div id="folderPanel" role="dialog" aria-modal="true" aria-labelledby="fpTitle"><div class="box">
+  <button class="close" id="fpClose">Done</button>
+  <h2 id="fpTitle">Folders</h2>
+  <h3>Where your scans come from</h3>
+  <p class="desc">The main folder keeps your progress (dates, notes, people). Scans in added folders are organised together with it, and are never moved.</p>
+  <div id="fpSources"></div>
+  <div class="btns">
+    <button id="fpAddPhotos" class="primary">Add photos…</button>
+    <button id="fpAddFolder">Add folder…</button>
+    <button id="fpRefresh">Check for new photos</button>
+  </div>
+  <p class="desc" style="margin-top:8px">“Add photos” copies the scans you pick into the main folder. New scans saved straight into these folders appear automatically when you come back to the app.</p>
+  <h3>Export location</h3>
+  <p class="desc">“Cropped Photos”, “By Person” and “Photo List” are saved here.</p>
+  <div id="fpOutput"></div>
+  <div class="btns"><button id="fpOutChange">Change export location…</button><button id="fpOutReset">Use main folder</button></div>
+  <h3>Switch album</h3>
+  <p class="desc">Open another main folder to work on a different set of photos. Progress in this one is already saved.</p>
+  <div class="btns"><button id="fpSwitch">Open another main folder…</button></div>
+  <div id="verLine"><span id="verText"></span><button id="verCheck">Check for updates</button></div>
+</div></div>
+<div id="progress"><div class="box"><div id="progText"></div><div class="track"><i id="progBar"></i></div></div></div>
+<input type="file" id="dirInput" webkitdirectory multiple style="display:none">
+
+<script>
+"use strict";
+const DATA_FILE='photo-data.json', FACE_FILE='face-data.json', OUT_DIR='Cropped Photos', PEOPLE_DIR='By Person', LIST_FILE='Photo List.csv';
+// files written by earlier (Chinese) versions are still read
+const LEGACY={[DATA_FILE]:'分图数据.json',[FACE_FILE]:'人脸数据.json','album-settings.json':'相册设置.json'};
+const NATIVE=window.native||null;   // present when running as the desktop app
+const FACEAPI_URL=NATIVE?'vendor/face-api.js':'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js';
+const MODEL_URL=NATIVE?'models/':'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
+const SAME=0.45, SUGGEST=0.58;   // face-descriptor distances
+
+const $=id=>document.getElementById(id);
+const state={dir:null, files:{}, scans:[], cur:-1, sel:-1, preview:{}, thumbs:{}, view:1, photo:0,
+  faces:{faces:[], people:{}, done:{}}};
+const rid=()=>Math.random().toString(36).slice(2,10);
+
+/* ================= open folder ================= */
+async function fileBlob(name){ return NATIVE?new Blob([await NATIVE.read(state.dirPath,name)]):state.files[name]; }
+const isImg=n=>/\.(jpe?g|png|tiff?)$/i.test(n)&&!n.startsWith('.');
+const scanByName=n=>state.scans.find(x=>x.name===n);
+async function scanBlob(s){ return (NATIVE&&s.dir)?new Blob([await NATIVE.read(s.dir,s.file)]):state.files[s.file||s.name]; }
+async function fileText(name){ return NATIVE?new TextDecoder().decode(await NATIVE.read(state.dirPath,name)):await state.files[name].text(); }
+const SETTINGS_FILE='album-settings.json';
+async function openNative(dir){
+  const tok=state.openTok=(state.openTok||0)+1;
+  await NATIVE.migrateLegacy(dir);
+  if(tok!==state.openTok) return;              // a newer open request took over
+  const r=await NATIVE.list(dir,true); state.dirPath=r.dir; state.dir='native';
+  state.files={}; for(const n of r.files) state.files[n]=true;
+  state.settings={sources:[],output:null};
+  if(state.files[SETTINGS_FILE]) try{ Object.assign(state.settings,JSON.parse(await fileText(SETTINGS_FILE))); }catch(e){}
+  state.preview={}; state.thumbs={}; for(const k in pending) delete pending[k]; fullCache={name:null,bmp:null};
+  state.faces={faces:[],people:{},done:{}}; state.cur=-1; state.photo=0; state.scans=[];
+  $('welcome').style.display=''; $('exportBtn').disabled=true;
+  await loadEntries(await nativeEntries());
+  $('folderBtn').hidden=false;
+}
+// every scan image: top level of the main folder, plus the folders the user added
+async function nativeEntries(){
+  const out=[]; state.missing=[];
+  const main=await NATIVE.list(state.dirPath,false);
+  for(const f of main.files.filter(isImg).sort()) out.push({name:f,dir:state.dirPath,file:f,label:''});
+  for(const d of state.settings.sources){
+    try{ const r=await NATIVE.list(d,false); const label=d.split('/').pop();
+      for(const f of r.files.filter(isImg).sort()) out.push({name:d+'/'+f,dir:d,file:f,label}); }
+    catch(e){ state.missing.push(d); }
+  }
+  return out;
+}
+async function saveSettings(){ await ioWrite(SETTINGS_FILE,JSON.stringify(state.settings,null,1)); }
+// open the last album straight away, so every tab works from the moment the app starts
+if(NATIVE) NATIVE.lastFolder().then(async p=>{
+  if(!p||state.openTok) return;               // nothing remembered, or a folder is already being opened
+  const b=$('lastBtn'); b.hidden=false; b.textContent='Open last folder: '+p.split('/').pop(); b.onclick=()=>openNative(p);
+  const h=$('welcome').querySelector('h2'), old=h.textContent; h.textContent='Opening '+p.split('/').pop()+'…';
+  try{ await openNative(p); }catch(e){ h.textContent=old; }
+});
+$('openBtn').onclick=async()=>{
+  if(NATIVE){ const p=await NATIVE.pickFolder(); if(p) await openNative(p); return; }
+  if(window.showDirectoryPicker){
+    try{
+      const h=await showDirectoryPicker({mode:'readwrite'}); state.dir=h;
+      const files={}; for await(const [n,e] of h.entries()) if(e.kind==='file') files[n]=await e.getFile();
+      await loadFiles(files);
+    }catch(e){ if(e.name!=='AbortError') alert('Could not open the folder: '+e.message); }
+  } else $('dirInput').click();
+};
+$('dirInput').onchange=async ev=>{
+  const files={}; for(const f of ev.target.files){ if(f.webkitRelativePath.split('/').length===2) files[f.name]=f; }
+  await loadFiles(files);
+};
+async function loadFiles(files){
+  state.files=files;
+  await loadEntries(Object.keys(files).filter(isImg).sort().map(n=>({name:n,file:n})));
+}
+async function loadEntries(entries){
+  const files=state.files, imgs=entries.map(e=>e.name);
+  const pick=n=>files[n]?n:(files[LEGACY[n]]?LEGACY[n]:null), dataF=pick(DATA_FILE), faceF=pick(FACE_FILE);
+  let det={}; if(dataF) try{ det=JSON.parse(await fileText(dataF)); }catch(e){}
+  if(faceF) try{ const f=JSON.parse(await fileText(faceF)); state.faces={faces:f.faces||[],people:f.people||{},done:f.done||{}}; }catch(e){}
+  if(!state.dir){ try{ const bak=JSON.parse(localStorage.getItem('photo-archive:'+imgs[0])||'null'); if(bak) det=bak; }catch(e){} }
+  state.scans=entries.map(e=>scanFrom(e,det[e.name]));
+  state.orphans={}; for(const k in det) if(!imgs.includes(k)) state.orphans[k]=det[k];   // keep data of folders that are not loaded
+  for(const s of state.scans) for(const b of s.boxes||[]) fixBox(b);
+  hist.undo=[]; hist.redo=[]; hist.last={}; hist.store={}; trackAll();
+  buildArchived(); if(state.archived.length) archiveMissing().catch(()=>{});
+  if(!imgs.length&&state.archived.length){ enterApp(); setSave('No scans in the folders right now. The Gallery still shows every photo you cropped before.'); return; }
+  if(!imgs.length){
+    if(!NATIVE){ alert('No scan images in this folder. Pick the folder that holds your scans.'); return; }
+    $('folderBtn').hidden=false; renderFolderPanel(); $('folderPanel').classList.add('on');
+    setSave('No scans here yet. Use “Add photos” or “Add folder” to bring them in.'); return;
+  }
+  enterApp();
+  const tok=state.openTok, scans=state.scans;
+  for(const s of scans){ if(tok!==state.openTok||scans!==state.scans) return; await ensurePreview(s); renderList(); }
+  if(!state.dir) setSave('Safari cannot save into the folder: changes are kept in the browser and Export downloads a zip.');
+}
+function enterApp(){
+  $('welcome').style.display='none'; $('exportBtn').disabled=false;
+  let v=1; try{ v=+localStorage.getItem('ops:lastView')||1; }catch(e){}
+  if(!state.scans.length) v=4;
+  show(v>=1&&v<=4?v:1); if(state.view===1) selectScan(Math.max(0,state.cur));
+}
+function scanFrom(e,d){ return {...e,width:d?d.width:0,height:d?d.height:0,boxes:d?d.boxes.map(b=>({...b})):null,done:d?!!d.done:false}; }
+const geomSig=b=>[b.cx,b.cy,b.w,b.h,b.angle].map(v=>Math.round(v*10)/10).join(',');
+const restoredOK=b=>!!(b&&b.restored&&b.restored.sig===geomSig(b));
+function fixBox(b){ if(b.restored){ if(b.restored.rot==null) b.restored.rot=b.rot||0; if(!b.restored.sig&&b.cx!=null) b.restored.sig=geomSig(b); } b.id=b.id||rid(); b.note=b.note||''; b.date=(b.date||'').replace(/^约\s*/,'c. '); b.dateSrc=b.dateSrc||(b.date?'user':''); if(b.rot==null)b.rot=0; if(!b.conf)b.conf='none'; }
+
+const pending={};
+function ensurePreview(s){ if(state.preview[s.name]) return Promise.resolve(state.preview[s.name]); return pending[s.name]||(pending[s.name]=buildPreview(s)); }
+async function readDpi(blob){
+  try{ const h=new Uint8Array(await blob.slice(0,20).arrayBuffer());
+    // JFIF APP0: "JFIF\0", version, units (1 = dots per inch), x density
+    if(h[6]===0x4A&&h[7]===0x46&&h[8]===0x49&&h[9]===0x46&&h[13]===1){ const d=(h[14]<<8)|h[15]; return d>=72?d:0; } }catch(e){}
+  return 0;
+}
+async function buildPreview(s){
+  const blob=await scanBlob(s); if(s.dpi==null) s.dpi=await readDpi(blob);
+  const bmp=await createImageBitmap(blob);
+  if(!s.width){ s.width=bmp.width; s.height=bmp.height; }
+  const k=1600/Math.max(bmp.width,bmp.height);
+  const c=new OffscreenCanvas(Math.round(bmp.width*k),Math.round(bmp.height*k));
+  c.getContext('2d').drawImage(bmp,0,0,c.width,c.height); bmp.close&&bmp.close();
+  const small=await createImageBitmap(c); state.preview[s.name]=small;
+  const t=new OffscreenCanvas(80,Math.round(80*c.height/c.width)); t.getContext('2d').drawImage(small,0,0,t.width,t.height);
+  state.thumbs[s.name]=URL.createObjectURL(await t.convertToBlob({type:'image/jpeg',quality:.7}));
+  if(!s.boxes){ s.boxes=autoDetect(small,s.width/small.width); s.boxes.forEach(fixBox); hist.last[s.name]=geomOf(s); orientQueue.push(s); runOrientQueue(); }
+  return small;
+}
+// one full-resolution scan kept in memory at a time
+let fullCache={name:null,bmp:null};
+async function getFull(name){
+  if(fullCache.name===name) return fullCache.bmp;
+  if(fullCache.bmp&&fullCache.bmp.close) fullCache.bmp.close();
+  fullCache={name, bmp:await createImageBitmap(await scanBlob(scanByName(name)))};
+  return fullCache.bmp;
+}
+
+/* ================= saving ================= */
+let saveTimer=null;
+function setSave(t){ $('saveState').textContent=t; }
+function serialize(){
+  const o={...(state.orphans||{})}; for(const s of state.scans) o[s.name]={width:s.width,height:s.height,done:!!s.done,boxes:s.boxes.map(b=>({
+    id:b.id,cx:+b.cx.toFixed(1),cy:+b.cy.toFixed(1),w:+b.w.toFixed(1),h:+b.h.toFixed(1),angle:+b.angle.toFixed(2),rot:b.rot,conf:b.conf,date:b.date,dateSrc:b.dateSrc,note:b.note,restored:b.restored||null,back:b.back||null}))};
+  return o;
+}
+function changedData(){
+  trackAll();
+  clearTimeout(saveTimer); setSave('Saving…');
+  saveTimer=setTimeout(saveNow,700);
+}
+async function saveNow(){
+  try{
+    if(state.dir){
+      await ioWrite(DATA_FILE,JSON.stringify(serialize(),null,1));
+      await ioWrite(FACE_FILE,JSON.stringify(state.faces));
+      setSave('Saved '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}));
+    } else {
+      localStorage.setItem('photo-archive:'+state.scans[0].name,JSON.stringify(serialize()));
+      setSave('Kept in this browser');
+    }
+  }catch(e){ setSave('Save failed: '+e.message); }
+}
+async function ioWrite(rel,data){
+  if(NATIVE) return NATIVE.write(state.dirPath,rel,data);
+  const parts=rel.split('/'); let d=state.dir; for(const p of parts.slice(0,-1)) d=await d.getDirectoryHandle(p,{create:true});
+  return writeFile(d,parts[parts.length-1],data);
+}
+async function ioClearOutputs(){
+  if(NATIVE) return NATIVE.clearOutputs(state.dirPath,OUT_DIR,PEOPLE_DIR);
+  const outDir=await state.dir.getDirectoryHandle(OUT_DIR,{create:true});
+  const old=[]; for await(const [nm,e] of outDir.entries()) if(e.kind==='file'&&/_\d\d(_restored|_back)?\.jpg$/.test(nm)) old.push(nm);
+  for(const nm of old) await outDir.removeEntry(nm);
+  try{ await state.dir.removeEntry(PEOPLE_DIR,{recursive:true}); }catch(e){}
+}
+async function writeFile(dir,name,data){ const fh=await dir.getFileHandle(name,{create:true}); const w=await fh.createWritable(); await w.write(data); await w.close(); }
+
+/* ================= views ================= */
+document.querySelectorAll('#steps button').forEach(b=>b.onclick=()=>{ const v=+b.dataset.v; if(state.scans.length||(v===4&&galAll().length)) show(v); });
+function show(v){
+  state.view=v; try{ localStorage.setItem('ops:lastView',String(v)); }catch(e){}
+  document.querySelectorAll('#steps button').forEach(b=>b.classList.toggle('on',+b.dataset.v===v));
+  document.querySelectorAll('.view').forEach(el=>el.classList.toggle('on',el.id==='v'+v));
+  if(v===1&&state.cur>=0) selectScan(state.cur);
+  if(v===2) openPhoto(Math.min(state.photo,allPhotos().length-1));
+  if(v===3) renderPeople();
+  if(v===4) renderGallery();
+}
+const allPhotos=()=>state.scans.flatMap(s=>(s.boxes||[]).map((b,i)=>({s,b,i})));
+/* ---------- photos whose scan is no longer in the folder ----------
+   Their data stays in photo-data.json. The first time a scan goes missing, each of its cropped photos is
+   copied from “Cropped Photos” into the hidden “.crops” folder (named by photo id), so the Gallery can still
+   show it and Export can still write it after the scan file is gone. */
+const CROPS_DIR='.crops';
+const archPath=b=>`${CROPS_DIR}/${b.id}.jpg`;
+function buildArchived(){
+  const out=[], live=new Set(state.scans.map(s=>s.name));
+  for(const [key,d] of Object.entries(state.orphans||{})){
+    if(live.has(key)||!d||!d.boxes) continue;
+    const parts=key.split('/'), file=parts.pop(), label=parts.length?parts.pop():'';
+    const s={name:key,file,label,arch:true};
+    d.boxes.forEach((b,i)=>{ fixBox(b); out.push({s,b,i,arch:true}); });
+  }
+  state.archived=out; return out;
+}
+const galAll=()=>allPhotos().concat((state.archived||[]).filter(ph=>!(state.lostIds&&state.lostIds.has(ph.b.id))));
+function stripExif(j){   // drop old Exif blocks so a new date/note can be written cleanly
+  if(!(j[0]===0xFF&&j[1]===0xD8)) return j;
+  const keep=[j.subarray(0,2)]; let at=2;
+  while(at+4<=j.length&&j[at]===0xFF){
+    const m=j[at+1]; if(m===0xDA||m===0xD9) break;
+    const len=(j[at+2]<<8)|j[at+3], isExif=m===0xE1&&j[at+4]===0x45&&j[at+5]===0x78&&j[at+6]===0x69&&j[at+7]===0x66;
+    if(!isExif) keep.push(j.subarray(at,at+2+len)); at+=2+len;
+  }
+  keep.push(j.subarray(at)); const n=keep.reduce((a,x)=>a+x.length,0), o=new Uint8Array(n); let p=0; for(const x of keep){ o.set(x,p); p+=x.length; } return o;
+}
+async function archiveMissing(){
+  // returns the photos that have no saved copy (their scan and their exported file are both gone)
+  buildArchived(); if(!NATIVE||!state.dirPath||!state.archived.length) return [];
+  let have=new Set(); try{ have=new Set((await NATIVE.list(state.dirPath+'/'+CROPS_DIR,false)).files); }catch(e){}
+  const todo=state.archived.filter(ph=>!have.has(ph.b.id+'.jpg')); if(!todo.length){ state.lostIds=new Set(); return []; }
+  const root=outRoot()||state.dirPath, dirs=new Set([OUT_DIR,...((state.settings&&state.settings.madeDirs)||[])]);
+  for(const ph of todo){ const y=yearOf(ph.b.date); dirs.add(OUT_DIR+'/'+(y||'Unknown year')); if(y) dirs.add(OUT_DIR+'/'+Math.floor(+y/10)*10+'s'); }
+  const where={};
+  for(const d of dirs){ try{ for(const f of (await NATIVE.list(root+'/'+d,false)).files) if(!where[f]) where[f]=d; }catch(e){} }
+  const lost=[];
+  for(const ph of todo){
+    const nm=outName(ph.s,ph.i), d=where[nm];
+    if(!d){ lost.push(ph); continue; }
+    try{ const bytes=await NATIVE.read(root+'/'+d,nm); await NATIVE.write(state.dirPath,archPath(ph.b),stripExif(new Uint8Array(bytes))); }
+    catch(e){ lost.push(ph); }
+  }
+  state.lostIds=new Set(lost.map(ph=>ph.b.id));
+  if(state.view===4) renderGallery();
+  return lost;
+}
+
+/* ================= step 1: cutting ================= */
+/* ---------- automatic detection (port of the Python version) ---------- */
+function integral(m,W,H){
+  const I=new Int32Array((W+1)*(H+1));
+  for(let y=0;y<H;y++){ let row=0; for(let x=0;x<W;x++){ row+=m[y*W+x]; I[(y+1)*(W+1)+x+1]=I[y*(W+1)+x+1]+row; } }
+  return I;
+}
+function morph(m,W,H,k,erode){
+  const I=integral(m,W,H), r=k>>1, out=new Uint8Array(W*H);
+  for(let y=0;y<H;y++){ const y0=Math.max(0,y-r), y1=Math.min(H,y-r+k);
+    for(let x=0;x<W;x++){ const x0=Math.max(0,x-r), x1=Math.min(W,x-r+k);
+      const s=I[y1*(W+1)+x1]-I[y0*(W+1)+x1]-I[y1*(W+1)+x0]+I[y0*(W+1)+x0];
+      out[y*W+x]=erode?(s===(x1-x0)*(y1-y0)?1:0):(s>0?1:0); } }
+  return out;
+}
+function components(m,W,H){
+  const lab=new Int32Array(W*H), out=[]; let n=0; const st=new Int32Array(W*H);
+  for(let i=0;i<W*H;i++){
+    if(!m[i]||lab[i]) continue; n++; let sp=0; st[sp++]=i; lab[i]=n; const pix=[];
+    while(sp){ const p=st[--sp]; pix.push(p); const px=p%W, py=(p-px)/W;
+      for(let dy=-1;dy<=1;dy++){ const yy=py+dy; if(yy<0||yy>=H) continue;
+        for(let dx=-1;dx<=1;dx++){ const xx=px+dx; if(xx<0||xx>=W) continue; const q=yy*W+xx; if(m[q]&&!lab[q]){ lab[q]=n; st[sp++]=q; } } } }
+    out.push(pix);
+  }
+  return out;
+}
+function fillHoles(m,W,H){
+  const bg=new Uint8Array(W*H), st=[];
+  const push=i=>{ if(!m[i]&&!bg[i]){ bg[i]=1; st.push(i); } };
+  for(let x=0;x<W;x++){ push(x); push((H-1)*W+x); } for(let y=0;y<H;y++){ push(y*W); push(y*W+W-1); }
+  while(st.length){ const p=st.pop(), x=p%W; if(x>0)push(p-1); if(x<W-1)push(p+1); if(p>=W)push(p-W); if(p<W*(H-1))push(p+W); }
+  const out=new Uint8Array(W*H); for(let i=0;i<W*H;i++) out[i]=bg[i]?0:1; return out;
+}
+function minRect(pix,W){
+  // hull of per-row extreme points, then rotating calipers
+  const rows=new Map();
+  for(const p of pix){ const x=p%W, y=(p-x)/W; const r=rows.get(y); if(!r) rows.set(y,[x,x]); else { if(x<r[0])r[0]=x; if(x>r[1])r[1]=x; } }
+  const pts=[]; for(const [y,[a,b]] of rows){ pts.push([a,y]); if(b!==a) pts.push([b,y]); }
+  pts.sort((p,q)=>p[0]-q[0]||p[1]-q[1]);
+  const cross=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
+  const lo=[],up=[]; for(const p of pts){ while(lo.length>=2&&cross(lo[lo.length-2],lo[lo.length-1],p)<=0) lo.pop(); lo.push(p); }
+  for(let i=pts.length-1;i>=0;i--){ const p=pts[i]; while(up.length>=2&&cross(up[up.length-2],up[up.length-1],p)<=0) up.pop(); up.push(p); }
+  const hull=lo.slice(0,-1).concat(up.slice(0,-1));
+  let best=null;
+  for(let i=0;i<hull.length;i++){
+    const a=hull[i], b=hull[(i+1)%hull.length], len=Math.hypot(b[0]-a[0],b[1]-a[1]); if(!len) continue;
+    const ux=(b[0]-a[0])/len, uy=(b[1]-a[1])/len;
+    let u0=1e9,u1=-1e9,v0=1e9,v1=-1e9;
+    for(const p of hull){ const u=p[0]*ux+p[1]*uy, v=-p[0]*uy+p[1]*ux; if(u<u0)u0=u; if(u>u1)u1=u; if(v<v0)v0=v; if(v>v1)v1=v; }
+    const area=(u1-u0)*(v1-v0);
+    if(!best||area<best.area){ const cu=(u0+u1)/2, cv=(v0+v1)/2;
+      best={area,cx:cu*ux-cv*uy,cy:cu*uy+cv*ux,w:u1-u0,h:v1-v0,angle:Math.atan2(uy,ux)*180/Math.PI}; }
+  }
+  if(!best) return null;
+  best.fill=pix.length/Math.max(1,best.area);
+  return best;
+}
+function splitBlob(pix,W,H,minArea){
+  // work inside the blob's bounding box
+  let x0=W,y0=H,x1=0,y1=0; for(const p of pix){ const x=p%W,y=(p-x)/W; if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; }
+  const pad=2, bw=x1-x0+1+2*pad, bh=y1-y0+1+2*pad, blob=new Uint8Array(bw*bh);
+  for(const p of pix){ const x=p%W,y=(p-x)/W; blob[(y-y0+pad)*bw+(x-x0+pad)]=1; }
+  const back=q=>{ const x=q%bw, y=(q-x)/bw; return (y+y0-pad)*W+(x+x0-pad); };
+  for(const k of [7,11,15,21,27,35]){
+    const er=morph(blob,bw,bh,k,true);
+    const big=components(er,bw,bh).filter(c=>c.length>minArea*0.5);
+    if(big.length>=2){
+      return big.map(c=>{ const one=new Uint8Array(bw*bh); for(const q of c) one[q]=1;
+        const dl=morph(one,bw,bh,k,false); for(let i=0;i<bw*bh;i++) dl[i]&=blob[i];
+        const cc=components(dl,bw,bh); return cc.reduce((a,b)=>b.length>a.length?b:a).map(back); });
+    }
+  }
+  return null;
+}
+function autoDetect(bmp,upscale){
+  const W=bmp.width, H=bmp.height;
+  const c=new OffscreenCanvas(W,H), x=c.getContext('2d',{willReadFrequently:true}); x.drawImage(bmp,0,0);
+  const d=x.getImageData(0,0,W,H).data;
+  let m=new Uint8Array(W*H);
+  for(let i=0;i<W*H;i++){ const r=d[i*4],g=d[i*4+1],b=d[i*4+2], mx=Math.max(r,g,b), mn=Math.min(r,g,b);
+    m[i]=(.299*r+.587*g+.114*b<238 || (mx?255*(mx-mn)/mx:0)>22)?1:0; }
+  m=morph(morph(m,W,H,3,true),W,H,3,false);      // open: remove dust
+  m=morph(morph(m,W,H,9,false),W,H,9,true);      // close: join photo areas
+  m=fillHoles(m,W,H);
+  const minArea=W*H*0.012, found=[];
+  const queue=components(m,W,H).filter(p=>p.length>minArea);
+  while(queue.length){
+    const pix=queue.pop(), r=minRect(pix,W); if(!r) continue;
+    // always test for a thin neck: photos that touch can still form an almost perfect rectangle
+    { const parts=splitBlob(pix,W,H,minArea); if(parts&&parts.length>=2){ queue.push(...parts.filter(p=>p.length>minArea*0.5)); continue; } }
+    found.push(r);
+  }
+  let boxes=found.map(r=>{
+    let {cx,cy,w,h,angle:a}=r;
+    while(a>45){ a-=90; [w,h]=[h,w]; } while(a<=-45){ a+=90; [w,h]=[h,w]; }
+    if(Math.abs(a)<0.4) a=0;
+    return {cx:cx*upscale,cy:cy*upscale,w:w*upscale,h:h*upscale,angle:a,rot:0,conf:'none'};
+  });
+  boxes.sort((p,q)=>p.cy-q.cy);
+  const rows=[]; let cur=[];
+  for(const b of boxes){ if(cur.length&&b.cy-cur[0].cy>Math.min(...cur.map(o=>Math.min(o.w,o.h)))*0.5){ rows.push(cur); cur=[]; } cur.push(b); }
+  if(cur.length) rows.push(cur);
+  return rows.flatMap(r=>r.sort((p,q)=>p.cx-q.cx));
+}
+
+/* ---------- edge refinement: snap a box to the photo's real edges and straighten it (full resolution) ---------- */
+function minChannel(full,bb){
+  const c=renderCropTo(full,1,{...bb,rot:0},0), x=c.getContext('2d',{willReadFrequently:true});
+  const W=c.width,H=c.height,d=x.getImageData(0,0,W,H).data,g=new Uint8Array(W*H);
+  for(let i=0,j=0;i<g.length;i++,j+=4){ const r=d[j],gg=d[j+1],b=d[j+2]; g[i]=r<gg?(r<b?r:b):(gg<b?gg:b); }
+  c.width=c.height=0; return {g,W,H};
+}
+const RM=48;
+function edgeFit(img,side){
+  const {g,W,H}=img, n=(side==='top'||side==='bottom')?W:H, L=(side==='top'||side==='bottom')?H:W;
+  const at=(along,depth)=>{ let x,y; if(side==='top'){x=along;y=depth;} else if(side==='bottom'){x=along;y=H-1-depth;} else if(side==='left'){x=depth;y=along;} else {x=W-1-depth;y=along;} return g[y*W+x]; };
+  const xs=[],ys=[], lo=Math.floor(n*0.08), hi=Math.floor(n*0.92), maxD=Math.min(L,2*RM+20);
+  for(let a=lo;a<hi;a+=3){
+    let idx=-1; for(let d=0;d<maxD;d++) if(at(a,d)<238){ idx=d; break; }
+    if(idx<4) continue;
+    let bgc=0; for(let d=idx-4;d<idx;d++) if(at(a,d)>=246) bgc++;
+    if(bgc/4<0.75) continue;
+    xs.push(a); ys.push(idx);
+  }
+  if(xs.length<40) return null;
+  let keep=xs.map(()=>true), k=0, c=0;
+  const fit=()=>{ let sx=0,sy=0,sxx=0,sxy=0,m=0; for(let i=0;i<xs.length;i++) if(keep[i]){ sx+=xs[i]; sy+=ys[i]; sxx+=xs[i]*xs[i]; sxy+=xs[i]*ys[i]; m++; }
+    const den=m*sxx-sx*sx; k=den?(m*sxy-sx*sy)/den:0; c=(sy-k*sx)/m; return m; };
+  for(let it=0;it<3;it++){
+    fit(); const res=xs.map((x,i)=>Math.abs(ys[i]-(k*x+c)));
+    const kept=res.filter((r,i)=>keep[i]).sort((a,b)=>a-b), p70=kept[Math.floor(kept.length*0.7)]||0, thr=Math.max(2.5,p70*1.5);
+    keep=res.map(r=>r<thr); if(keep.filter(Boolean).length<30) return null;
+  }
+  fit(); const q=keep.filter(Boolean).length/xs.length;
+  return q>0.6?{k,c,n}:null;
+}
+function refineBox(full,b){
+  const grow=bx=>({...bx,w:bx.w+2*RM,h:bx.h+2*RM});
+  // 1) residual tilt from the edges that could be seen
+  let img=minChannel(full,grow(b)); const deltas=[];
+  for(const side of ['top','bottom','left','right']){ const f=edgeFit(img,side); if(!f) continue;
+    const t=Math.atan(f.k)*180/Math.PI; deltas.push({top:t,bottom:-t,left:-t,right:t}[side]); }
+  let d=0; const sorted=[...deltas].sort((a,b)=>a-b);
+  if(deltas.length>=2&&sorted[sorted.length-1]-sorted[0]<=0.6) d=sorted[Math.floor(sorted.length/2)];
+  else if(deltas.length===1&&Math.abs(deltas[0])<=1) d=deltas[0];
+  if(Math.abs(d)>3||Math.abs(d)<0.05) d=0;
+  const nb={...b,angle:b.angle+d};
+  // 2) move each side onto the fitted edge, 2px inside
+  img=minChannel(full,grow(nb));
+  const sideNew={top:RM,bottom:RM,left:RM,right:RM};
+  for(const side of Object.keys(sideNew)){ const f=edgeFit(img,side); if(!f) continue;
+    const depth=Math.max(f.k*f.n*0.08+f.c, f.k*f.n*0.92+f.c); if(Math.abs(depth-RM)<=RM) sideNew[side]=depth+2; }
+  img=null;
+  const t=sideNew.top-RM, bt=sideNew.bottom-RM, l=sideNew.left-RM, r=sideNew.right-RM;
+  if(nb.w-l-r<60||nb.h-t-bt<60) return {...b};
+  const a=nb.angle*Math.PI/180, ca=Math.cos(a), sa=Math.sin(a), dx=(l-r)/2, dy=(t-bt)/2;
+  return {...nb,w:nb.w-l-r,h:nb.h-t-bt,cx:nb.cx+dx*ca-dy*sa,cy:nb.cy+dx*sa+dy*ca};
+}
+
+/* ---------- automatic orientation: try 4 turns, keep the one with the most upright faces ---------- */
+const orientQueue=[]; let orientBusy=false;
+async function runOrientQueue(){
+  if(orientBusy) return; orientBusy=true;
+  try{
+    while(orientQueue.length){ const s=orientQueue.shift(); await autoOrient(s); if(state.view===1&&cur()===s){ drawOverlay(); renderCrops(); } renderList(); changedData(); }
+  }catch(e){ setSave('Auto-rotate did not finish: '+(e.message||e)); }
+  orientBusy=false;
+}
+function turned(src,k){
+  if(!k) return src; const c=document.createElement('canvas'); const sw=k%2===1;
+  c.width=sw?src.height:src.width; c.height=sw?src.width:src.height;
+  const x=c.getContext('2d'); x.translate(c.width/2,c.height/2); x.rotate(k*Math.PI/2); x.drawImage(src,-src.width/2,-src.height/2); return c;
+}
+async function autoOrient(s){
+  await loadFaceApi();
+  const full=await getFull(s.name);
+  const opts=new faceapi.SsdMobilenetv1Options({minConfidence:0.5,maxResults:100});
+  for(const b of s.boxes){
+    if(!b.refined){ try{ Object.assign(b,refineBox(full,b)); b.refined=1; }catch(e){} }
+    if(b.conf==='high') continue;
+    setSave(`Working out which way is up (scan ${state.scans.indexOf(s)+1})…`);
+    const base=renderCropTo(full,1,{...b,rot:0},900), sc=[];
+    for(let k=0;k<4;k++){ const dets=await faceapi.detectAllFaces(turned(base,k),opts); sc.push(dets.reduce((a,d)=>a+d.score,0)); }
+    const order=[0,1,2,3].sort((p,q)=>sc[q]-sc[p]), v0=sc[order[0]], v1=sc[order[1]];
+    if(v0>0&&v0>v1){ b.rot=order[0]; b.conf=(v0>=0.9&&v0>=2*v1)?'high':'low'; } else { b.rot=0; b.conf='none'; }
+    b.scores=sc.map(v=>+v.toFixed(2));
+  }
+}
+$('redoBtn').onclick=()=>{
+  const s=cur(); if(!s) return;
+  if(!confirm('Re-detecting replaces the boxes on this scan (their dates and notes are cleared). Continue?')) return;
+  const pv=state.preview[s.name]; s.boxes=autoDetect(pv,s.width/pv.width); s.boxes.forEach(fixBox); state.sel=-1;
+  for(const b of s.boxes) delete filmCache[b.id];
+  drawOverlay(); renderCrops(); renderList(); changedData(); orientQueue.push(s); runOrientQueue();
+};
+/* self-test hook used when building the app: detect + orient every scan from scratch */
+async function selfTest(){
+  const out={};
+  for(const s of state.scans){ await ensurePreview(s); const pv=state.preview[s.name];
+    const boxes=autoDetect(pv,s.width/pv.width); boxes.forEach(fixBox);
+    const t={...s,boxes}; await autoOrient(t);
+    out[s.name]=boxes.map(b=>({cx:Math.round(b.cx),cy:Math.round(b.cy),w:Math.round(b.w),h:Math.round(b.h),angle:+b.angle.toFixed(2),rot:b.rot,conf:b.conf,scores:b.scores})); }
+  return out;
+}
+
+function renderList(){
+  const el=$('list'); el.innerHTML='';
+  state.scans.forEach((s,i)=>{
+    const unsure=(s.boxes||[]).filter(b=>b.conf!=='high').length;
+    const d=document.createElement('div'); d.className='scan-item'+(i===state.cur?' active':'');
+    d.innerHTML=`<img alt="" src="${state.thumbs[s.name]||''}"><div><div class="ct">Scan ${i+1}</div>
+      <div class="sub">${(s.boxes||[]).length} photos ${unsure?`<span class="chk">· ${unsure} to check</span>`:''}</div></div>`;
+    d.onclick=()=>selectScan(i); el.appendChild(d);
+  });
+}
+const canvas=$('scanCanvas'), ctx=canvas.getContext('2d'), svg=$('overlay'); let view={scale:1};
+const cur=()=>state.scans[state.cur];
+async function selectScan(i){
+  if(i<0||i>=state.scans.length) return;
+  state.cur=i; state.sel=-1; renderList();
+  const s=state.scans[i]; await ensurePreview(s); if(state.cur!==i||state.view!==1) return;
+  layout(); ctx.drawImage(state.preview[s.name],0,0,canvas.width,canvas.height); drawOverlay(); renderCrops();
+  const it=$('list').children[i]; it&&it.scrollIntoView({block:'nearest'});
+}
+$('prevBtn').onclick=()=>selectScan(state.cur-1);
+$('nextBtn').onclick=()=>selectScan(state.cur+1);
+function layout(){
+  const s=cur(), wrap=$('canvasWrap');
+  view.scale=Math.min((wrap.clientWidth-24)/s.width,(wrap.clientHeight-24)/s.height);
+  const dw=Math.round(s.width*view.scale), dh=Math.round(s.height*view.scale);
+  const ox=Math.round((wrap.clientWidth-dw)/2), oy=Math.round((wrap.clientHeight-dh)/2), dpr=devicePixelRatio||1;
+  for(const el of [canvas,svg]){ el.style.left=ox+'px'; el.style.top=oy+'px'; el.style.width=dw+'px'; el.style.height=dh+'px'; }
+  canvas.width=dw*dpr; canvas.height=dh*dpr; svg.setAttribute('viewBox',`0 0 ${dw} ${dh}`); svg.setAttribute('width',dw); svg.setAttribute('height',dh);
+}
+function corners(b){ const a=b.angle*Math.PI/180,c=Math.cos(a),s=Math.sin(a),hw=b.w/2,hh=b.h/2;
+  return [[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(([x,y])=>[b.cx+x*c-y*s,b.cy+x*s+y*c]); }
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); return e; }
+function drawOverlay(){
+  const s=cur(); svg.innerHTML='';
+  s.boxes.forEach((b,i)=>{
+    const pts=corners(b).map(([x,y])=>[x*view.scale,y*view.scale]), sel=i===state.sel;
+    const color=sel?'#2563c9':(b.conf==='high'?'#23574e':'#c07a14');
+    const poly=el('polygon',{points:pts.map(p=>p.join(',')).join(' '),fill:sel?'rgba(37,99,201,.12)':'rgba(255,255,255,0.001)',stroke:color,'stroke-width':sel?3:2.5});
+    poly.style.cursor='move'; poly.dataset.i=i; poly.dataset.kind='body'; svg.appendChild(poly);
+    const g=el('g',{}); g.style.pointerEvents='none';
+    const edge=[[0,1],[3,0],[2,3],[1,2]][b.rot%4];
+    g.appendChild(el('line',{x1:pts[edge[0]][0],y1:pts[edge[0]][1],x2:pts[edge[1]][0],y2:pts[edge[1]][1],stroke:color,'stroke-width':8,'stroke-linecap':'round',opacity:.85}));
+    const cx=b.cx*view.scale, cy=b.cy*view.scale;
+    g.appendChild(el('circle',{cx,cy,r:14,fill:color}));
+    const t=el('text',{x:cx,y:cy+5,'text-anchor':'middle',fill:'#fff','font-size':14,'font-weight':700}); t.textContent=i+1; g.appendChild(t);
+    svg.appendChild(g);
+    if(sel) pts.forEach((p,k)=>{ const h=el('rect',{x:p[0]-7,y:p[1]-7,width:14,height:14,fill:'#fff',stroke:'#2563c9','stroke-width':2});
+      h.dataset.i=i; h.dataset.kind='corner'; h.dataset.k=k; h.style.cursor='nwse-resize'; svg.appendChild(h); });
+  });
+}
+function renderCropTo(src,srcScale,b,maxSide){
+  const w=b.w*srcScale, h=b.h*srcScale, k=maxSide?Math.min(1,maxSide/Math.max(w,h)):1, rot=((b.rot%4)+4)%4, swap=rot%2===1;
+  const c=document.createElement('canvas'); c.width=Math.max(1,Math.round((swap?h:w)*k)); c.height=Math.max(1,Math.round((swap?w:h)*k));
+  const x=c.getContext('2d'); x.imageSmoothingQuality='high'; x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height);
+  x.translate(c.width/2,c.height/2); x.rotate(rot*Math.PI/2); x.scale(k,k); x.rotate(-b.angle*Math.PI/180);
+  x.drawImage(src,-b.cx*srcScale,-b.cy*srcScale); return c;
+}
+function renderCrops(){
+  const s=cur(), box=$('crops'); box.innerHTML='';
+  const bmp=state.preview[s.name], sc=bmp.width/s.width;
+  if(!s.boxes.length) box.innerHTML='<p style="color:var(--muted)">No boxes on this scan yet. Drag one out on the scan.</p>';
+  s.boxes.forEach((b,i)=>{
+    const d=document.createElement('div'); d.className='crop'+(i===state.sel?' selected':'');
+    d.innerHTML=`<div class="row"><span class="num">${i+1}</span>${b.conf==='high'?'':'<span class="chk">Check it is the right way up</span>'}
+      <span class="tools"><button title="Rotate left" aria-label="Rotate left">⟲</button><button title="Rotate right" aria-label="Rotate right">⟳</button><button title="Adjust crop" aria-label="Adjust crop">✎</button><button title="Remove" aria-label="Remove">✕</button></span></div>`;
+    const [l,r,adj,del]=d.querySelectorAll('button');
+    adj.onclick=e=>{e.stopPropagation(); openCropEditor(s,b);};
+    l.onclick=e=>{e.stopPropagation(); b.rot=(b.rot+3)%4; b.conf='high'; edited(i);};
+    r.onclick=e=>{e.stopPropagation(); b.rot=(b.rot+1)%4; b.conf='high'; edited(i);};
+    del.onclick=e=>{e.stopPropagation(); s.boxes.splice(i,1); state.sel=-1; edited();};
+    d.appendChild(renderCropTo(bmp,sc,b,360));
+    d.onclick=()=>{ state.sel=i; drawOverlay(); renderCrops(); };
+    box.appendChild(d);
+  });
+}
+function edited(sel){ if(sel!==undefined) state.sel=sel; for(const b of cur().boxes) delete filmCache[b.id]; drawOverlay(); renderCrops(); renderList(); changedData(); }
+let drag=null;
+function toScan(ev){ const r=svg.getBoundingClientRect(); return [(ev.clientX-r.left)/view.scale,(ev.clientY-r.top)/view.scale]; }
+svg.addEventListener('dblclick',ev=>{ const t=ev.target; if(t.dataset.kind==='body'){ const s=cur(); openCropEditor(s,s.boxes[+t.dataset.i]); } });
+svg.addEventListener('pointerdown',ev=>{
+  const t=ev.target, p=toScan(ev), s=cur(); svg.setPointerCapture(ev.pointerId);
+  if(t.dataset.kind==='corner'){ const b=s.boxes[+t.dataset.i]; drag={mode:'corner',i:+t.dataset.i,opp:corners(b)[(+t.dataset.k+2)%4],angle:b.angle}; }
+  else if(t.dataset.kind==='body'){ const i=+t.dataset.i, b=s.boxes[i]; state.sel=i; drag={mode:'move',i,start:p,cx:b.cx,cy:b.cy,moved:false}; drawOverlay(); renderCrops(); }
+  else { state.sel=-1; drag={mode:'new',start:p,i:-1}; drawOverlay(); renderCrops(); }
+});
+svg.addEventListener('pointermove',ev=>{
+  if(!drag) return; const p=toScan(ev), s=cur();
+  if(drag.mode==='move'){ const b=s.boxes[drag.i]; b.cx=drag.cx+p[0]-drag.start[0]; b.cy=drag.cy+p[1]-drag.start[1]; drag.moved=true; drawOverlay(); }
+  else if(drag.mode==='corner'){ const b=s.boxes[drag.i], a=drag.angle*Math.PI/180, c=Math.cos(a), sn=Math.sin(a), dx=p[0]-drag.opp[0], dy=p[1]-drag.opp[1];
+    b.w=Math.max(30,Math.abs(dx*c+dy*sn)); b.h=Math.max(30,Math.abs(-dx*sn+dy*c)); b.cx=(p[0]+drag.opp[0])/2; b.cy=(p[1]+drag.opp[1])/2; drawOverlay(); }
+  else { const [x0,y0]=drag.start; if(Math.abs(p[0]-x0)*view.scale<8&&Math.abs(p[1]-y0)*view.scale<8) return;
+    if(drag.i<0){ const nb={cx:0,cy:0,w:1,h:1,angle:0,rot:0,conf:'high'}; fixBox(nb); s.boxes.push(nb); drag.i=s.boxes.length-1; state.sel=drag.i; }
+    const b=s.boxes[drag.i]; b.cx=(x0+p[0])/2; b.cy=(y0+p[1])/2; b.w=Math.abs(p[0]-x0); b.h=Math.abs(p[1]-y0); drawOverlay(); }
+});
+svg.addEventListener('pointerup',()=>{
+  if(!drag) return; const s=cur(), d=drag; drag=null;
+  if(d.mode==='new'&&d.i>=0&&(s.boxes[d.i].w<40||s.boxes[d.i].h<40)){ s.boxes.splice(d.i,1); state.sel=-1; }
+  if(d.mode!=='move'||d.moved) edited();
+});
+window.addEventListener('keydown',ev=>{
+  if(state.view!==1||state.cur<0||/INPUT|TEXTAREA/.test(ev.target.tagName)) return;
+  const s=cur(), b=s.boxes[state.sel];
+  if(!b){ if(ev.key==='ArrowRight') selectScan(state.cur+1); if(ev.key==='ArrowLeft') selectScan(state.cur-1); return; }
+  if(ev.key==='Delete'||ev.key==='Backspace'){ s.boxes.splice(state.sel,1); state.sel=-1; edited(); ev.preventDefault(); }
+  else if(ev.key==='r'||ev.key==='R'){ b.rot=(b.rot+(ev.shiftKey?3:1))%4; b.conf='high'; edited(state.sel); }
+  else if(ev.key==='['){ b.angle-=0.5; edited(state.sel); } else if(ev.key===']'){ b.angle+=0.5; edited(state.sel); }
+  else if(ev.key==='Escape'){ state.sel=-1; drawOverlay(); renderCrops(); }
+});
+window.addEventListener('resize',()=>{ if(state.view===1&&state.cur>=0) selectScan(state.cur); });
+
+/* ================= step 2: dates & notes ================= */
+function parseDate(t){
+  t=(t||'').trim(); const approx=/约|左右|大概|\?|？|\bc\.|circa|~|about|approx|\ds\b/i.test(t);
+  const m=t.match(/(1[89]\d\d|20\d\d)(?:\D+(\d{1,2}))?(?:\D+(\d{1,2}))?/);
+  if(m) return {y:+m[1],m:m[2]?+m[2]:0,d:m[3]?+m[3]:0,approx};
+  const dec=t.match(/(\d\d)\s*(年代|'?s\b)/); if(dec) return {y:1900+ +dec[1],m:0,d:0,approx:true};
+  return null;
+}
+function stampHTML(t){
+  const p=parseDate(t); if(!p) return '';
+  const yy="'"+String(p.y).slice(2);
+  const parts=[yy]; if(p.m) parts.push(String(p.m).padStart(2,' ')); if(p.d) parts.push(String(p.d).padStart(2,' '));
+  return (p.approx?'<small>c.</small>':'')+parts.join('  ');
+}
+const yearOf=t=>{ const p=parseDate(t); return p?String(p.y):''; };
+const filmCache={};
+function filmThumb(ph){
+  if(filmCache[ph.b.id]) return filmCache[ph.b.id];
+  const bmp=state.preview[ph.s.name]; if(!bmp) return '';
+  const c=renderCropTo(bmp,bmp.width/ph.s.width,ph.b,180); return filmCache[ph.b.id]=c.toDataURL('image/jpeg',.75);
+}
+function renderFilm(){
+  const f=$('film'); f.innerHTML='';
+  allPhotos().forEach((ph,i)=>{
+    const d=document.createElement('div'); d.className='thumb'+(i===state.photo?' on':'');
+    const y=yearOf(ph.b.date);
+    d.innerHTML=`<img alt="" src="${filmThumb(ph)}">${y?`<span class="y">'${y.slice(2)}</span>`:''}${ph.b.note?'<span class="n" title="Has notes"></span>':''}`;
+    d.onclick=()=>openPhoto(i); f.appendChild(d);
+  });
+  const on=f.children[state.photo]; on&&on.scrollIntoView({inline:'center',block:'nearest'});
+}
+async function openPhoto(i){
+  const list=allPhotos(); if(!list.length) return;
+  i=Math.max(0,Math.min(i,list.length-1)); state.photo=i; const ph=list[i];
+  $('pos').textContent=`Photo ${i+1} of ${list.length} · from scan ${state.scans.indexOf(ph.s)+1}`;
+  $('dateIn').value=ph.b.date; $('noteIn').value=ph.b.note; showDateSrc(ph.b); updateStamp();
+  const names=peopleInBox(ph.b.id); $('photoPeople').textContent=names.length?'In this photo: '+names.join(', '):'';
+  renderFilm();
+  const big=$('bigCanvas');
+  await ensurePreview(ph.s); const pv=state.preview[ph.s.name]; const quick=renderCropTo(pv,pv.width/ph.s.width,ph.b,1600);
+  big.width=quick.width; big.height=quick.height; big.getContext('2d').drawImage(quick,0,0);
+  updateAiPanel(ph.b); updateBackPanel(ph.b);
+  if(ph.b.back&&state.sideView==='back'){ try{ const bmp=await createImageBitmap(await fileBlob(ph.b.back.file)); if(state.photo!==i) return;
+      const k=Math.min(1,1800/Math.max(bmp.width,bmp.height)); big.width=Math.round(bmp.width*k); big.height=Math.round(bmp.height*k); big.getContext('2d').drawImage(bmp,0,0,big.width,big.height); bmp.close&&bmp.close(); $('stampmark').classList.add('empty'); return; }catch(e){} }
+  if(restoredOK(ph.b)&&state.aiView==='new'){ try{ const bmp=await loadRestored(ph.b); if(state.photo!==i) return;
+      const k=Math.min(1,1800/Math.max(bmp.width,bmp.height)); big.width=Math.round(bmp.width*k); big.height=Math.round(bmp.height*k); big.getContext('2d').drawImage(bmp,0,0,big.width,big.height); return; }catch(e){} }
+  const full=await getFull(ph.s.name); if(state.photo!==i) return;
+  const sharp=renderCropTo(full,1,ph.b,1800); big.width=sharp.width; big.height=sharp.height; big.getContext('2d').drawImage(sharp,0,0);
+}
+function showDateSrc(b){
+  const el=$('dateSrc'); el.className=b.dateSrc||'';
+  el.textContent={stamp:'Printed on the photo',guess:'Estimated year: please confirm or change',user:'Entered by you'}[b.dateSrc]||'';
+}
+function updateStamp(){ const h=stampHTML($('dateIn').value); const s=$('stampmark'); s.innerHTML=h; s.classList.toggle('empty',!h); }
+const curPhoto=()=>allPhotos()[state.photo];
+$('dateIn').addEventListener('input',()=>{ const b=curPhoto().b; b.date=$('dateIn').value.trim(); b.dateSrc='user'; showDateSrc(b); updateStamp(); changedData(); });
+$('noteIn').addEventListener('input',()=>{ curPhoto().b.note=$('noteIn').value; changedData(); });
+$('dateIn').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); $('noteIn').focus(); } });
+$('noteIn').addEventListener('keydown',e=>{ if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)){ e.preventDefault(); openPhoto(state.photo+1).then(()=>$('dateIn').focus()); } });
+$('pPrev').onclick=()=>openPhoto(state.photo-1);
+$('pNext').onclick=()=>openPhoto(state.photo+1);
+window.addEventListener('keydown',ev=>{
+  if(state.view!==2||/INPUT|TEXTAREA/.test(ev.target.tagName)) return;
+  if(ev.key==='ArrowRight') openPhoto(state.photo+1); if(ev.key==='ArrowLeft') openPhoto(state.photo-1);
+});
+
+/* ================= step 3: people ================= */
+let faceapiReady=null;
+function loadFaceApi(){
+  if(faceapiReady) return faceapiReady;
+  faceapiReady=new Promise((ok,bad)=>{ const s=document.createElement('script'); s.src=FACEAPI_URL; s.onload=ok; s.onerror=()=>bad(new Error('Could not load face recognition. Check your internet connection.')); document.head.appendChild(s); })
+    .then(async()=>{ await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL); await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL); await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL); });
+  faceapiReady.catch(()=>{ faceapiReady=null; });
+  return faceapiReady;
+}
+function dist(a,b){ let s=0; for(let i=0;i<128;i++){ const d=a[i]-b[i]; s+=d*d; } return Math.sqrt(s); }
+async function detectFacesIn(canvas){
+  const opts=new faceapi.SsdMobilenetv1Options({minConfidence:0.45,maxResults:200});
+  return await faceapi.detectAllFaces(canvas,opts).withFaceLandmarks().withFaceDescriptors();
+}
+$('faceBtn').onclick=async()=>{
+  const todo=allPhotos().filter(ph=>!state.faces.done[ph.b.id]);
+  try{
+    showProg('Loading face recognition (your photos are not uploaded)…',0);
+    await loadFaceApi();
+    const newFaces=[]; let n=0;
+    todo.sort((a,b)=>a.s.name<b.s.name?-1:1);
+    for(const ph of todo){
+      showProg(`Finding faces: photo ${n+1} of ${todo.length}`, n/todo.length);
+      const full=await getFull(ph.s.name);
+      const c=renderCropTo(full,1,ph.b,2000);
+      const res=await detectFacesIn(c);
+      for(const r of res){
+        const bx=r.detection.box; if(bx.width<18) continue;
+        const m=bx.width*0.35, tx=Math.max(0,bx.x-m), ty=Math.max(0,bx.y-m), tw=Math.min(c.width-tx,bx.width+2*m), th=Math.min(c.height-ty,bx.height+2*m);
+        const t=document.createElement('canvas'); t.width=t.height=96; t.getContext('2d').drawImage(c,tx,ty,tw,th,0,0,96,96);
+        const f={id:rid(),box:ph.b.id,x:+(bx.x/c.width).toFixed(4),y:+(bx.y/c.height).toFixed(4),w:+(bx.width/c.width).toFixed(4),h:+(bx.height/c.height).toFixed(4),
+          d:Array.from(r.descriptor,v=>+v.toFixed(4)),t:t.toDataURL('image/jpeg',.8),pid:null};
+        state.faces.faces.push(f); newFaces.push(f);
+      }
+      state.faces.done[ph.b.id]=1; n++;
+      c.width=c.height=0;
+    }
+    showProg('Grouping similar faces…',1);
+    await new Promise(r=>setTimeout(r,30));
+    groupFaces(newFaces);
+    hideProg(); changedData(); renderPeople();
+  }catch(e){ hideProg(); alert(e.message||String(e)); }
+};
+// cluster: attach new faces to existing groups when close enough, then average-linkage among the rest
+function groupFaces(newFaces){
+  const existing={}; for(const f of state.faces.faces) if(f.pid&&!newFaces.includes(f)) (existing[f.pid]=existing[f.pid]||[]).push(f);
+  const rest=[];
+  for(const f of newFaces){
+    let best=null,bd=1e9;
+    for(const pid in existing){ const g=existing[pid]; if(g.some(o=>o.box===f.box)) continue; const d=g.reduce((a,o)=>a+dist(f.d,o.d),0)/g.length; if(d<bd){bd=d;best=pid;} }
+    if(best&&bd<SAME){ f.pid=best; existing[best].push(f); } else rest.push(f);
+  }
+  const N=rest.length; if(!N) return;
+  const D=new Float32Array(N*N);
+  for(let i=0;i<N;i++) for(let j=i+1;j<N;j++){ const v=rest[i].box===rest[j].box?Infinity:dist(rest[i].d,rest[j].d); D[i*N+j]=D[j*N+i]=v; }
+  const size=new Int32Array(N).fill(1), alive=new Uint8Array(N).fill(1), owner=[...Array(N).keys()];
+  while(true){
+    let bi=-1,bj=-1,bd=SAME;
+    for(let i=0;i<N;i++) if(alive[i]) for(let j=i+1;j<N;j++) if(alive[j]&&D[i*N+j]<bd){bd=D[i*N+j];bi=i;bj=j;}
+    if(bi<0) break;
+    for(let k=0;k<N;k++) if(alive[k]&&k!==bi&&k!==bj){ const v=(D[bi*N+k]*size[bi]+D[bj*N+k]*size[bj])/(size[bi]+size[bj]); D[bi*N+k]=D[k*N+bi]=v; }
+    size[bi]+=size[bj]; alive[bj]=0; for(let k=0;k<N;k++) if(owner[k]===bj) owner[k]=bi;
+  }
+  const pidOf={}; rest.forEach((f,k)=>{ const o=owner[k]; f.pid=pidOf[o]||(pidOf[o]=rid()); });
+}
+function groups(){
+  const g=new Map();
+  for(const f of state.faces.faces){ if(!f.pid) continue; const name=state.faces.people[f.pid]||''; const key=name?'n:'+name:'p:'+f.pid;
+    if(!g.has(key)) g.set(key,{key,name,pids:new Set(),faces:[]}); const x=g.get(key); x.pids.add(f.pid); x.faces.push(f); }
+  return [...g.values()];
+}
+function peopleInBox(boxId){
+  const s=new Set(); for(const f of state.faces.faces) if(f.box===boxId){ const n=state.faces.people[f.pid]; if(n) s.add(n); } return [...s];
+}
+function photoCount(g){ return new Set(g.faces.map(f=>f.box)).size; }
+function renderPeople(){
+  const list=$('peopleList'); list.innerHTML='';
+  const total=allPhotos().length, done=allPhotos().filter(p=>state.faces.done[p.b.id]).length;
+  $('faceStatus').textContent=state.faces.faces.length?`${done} of ${total} photos checked · ${state.faces.faces.length} faces`:'No faces found yet. Your photos never leave this computer.';
+  $('faceBtn').textContent=done&&done<total?`Find faces in new photos (${total-done})`:(done?'All faces found':'Find all faces');
+  $('faceBtn').disabled=done===total&&total>0;
+  const gs=groups();
+  const named=gs.filter(g=>g.name).sort((a,b)=>a.name.localeCompare(b.name,'zh'));
+  const unnamed=gs.filter(g=>!g.name).sort((a,b)=>photoCount(b)-photoCount(a));
+  const multi=unnamed.filter(g=>photoCount(g)>1), singles=unnamed.filter(g=>photoCount(g)<=1);
+  for(const g of [...named,...multi]) list.appendChild(personRow(g,named));
+  if(singles.length){
+    const d=document.createElement('details'); d.className='singles';
+    d.innerHTML=`<summary>Faces that appear in only one photo (${singles.length} groups)</summary>`;
+    for(const g of singles) d.appendChild(personRow(g,named));
+    list.appendChild(d);
+  }
+}
+function personRow(g,named){
+  const row=document.createElement('div'); row.className='person'+(g.name?' named':'');
+  const who=document.createElement('div'); who.className='who';
+  const inp=document.createElement('input'); inp.value=g.name; inp.placeholder='Who is this?'; inp.setAttribute('aria-label','Name');
+  inp.addEventListener('change',()=>{ const v=inp.value.trim(); for(const pid of g.pids){ if(v) state.faces.people[pid]=v; else delete state.faces.people[pid]; } changedData(); renderPeople(); });
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter') inp.blur(); });
+  who.appendChild(inp);
+  const meta=document.createElement('div'); meta.className='meta'; meta.textContent=`In ${photoCount(g)} photo${photoCount(g)===1?'':'s'}`; who.appendChild(meta);
+  if(!g.name&&named.length){
+    const sc=named.map(n=>{ let s=0,c=0; for(const a of g.faces) for(const b of n.faces){ s+=dist(a.d,b.d); c++; } return {n,d:s/c}; }).filter(x=>x.d<SUGGEST).sort((a,b)=>a.d-b.d).slice(0,3);
+    if(sc.length){ const sg=document.createElement('div'); sg.className='sugg';
+      for(const x of sc){ const b=document.createElement('button'); b.textContent=`Maybe ${x.n.name}?`; b.onclick=()=>{ for(const pid of g.pids) state.faces.people[pid]=x.n.name; changedData(); renderPeople(); }; sg.appendChild(b); }
+      who.appendChild(sg); }
+  }
+  const faces=document.createElement('div'); faces.className='faces';
+  const shown=g.faces.slice(0,40);
+  for(const f of shown){ const d=document.createElement('div'); d.className='face'; d.title='Not this person: click to take it out of the group';
+    d.innerHTML=`<img alt="" src="${f.t}">`; d.onclick=()=>{ f.pid=rid(); changedData(); renderPeople(); }; faces.appendChild(d); }
+  if(g.faces.length>shown.length){ const m=document.createElement('span'); m.className='more'; m.textContent=`and ${g.faces.length-shown.length} more`; faces.appendChild(m); }
+  row.append(who,faces); return row;
+}
+
+
+/* ================= AI restore (Real-ESRGAN + GFPGAN, runs on this Mac) ================= */
+const AI_DIR='AI Restored', AI_DIR_OLD='AI修复';
+const restoredPath=b=>`${AI_DIR}/${b.id}.jpg`;
+let aiOK=false; state.aiView='new';
+if(NATIVE&&NATIVE.aiAvailable) NATIVE.aiAvailable().then(v=>{ aiOK=!!v; const ph=state.scans.length&&curPhoto(); if(ph) updateAiPanel(ph.b); });
+function updateAiPanel(b){
+  $('aiBox').hidden=!aiOK; if(!aiOK) return;
+  $('aiViewRow').hidden=!restoredOK(b);
+  if(b.restored&&!restoredOK(b)) $('aiMsg').innerHTML='<span class="stale">The crop changed after this photo was restored. Press “Restore again” to update it, or Undo the crop change.</span>';
+  $('aiShowOrig').classList.toggle('on',state.aiView!=='new'); $('aiShowNew').classList.toggle('on',state.aiView==='new');
+  $('aiBtn').textContent=b.restored?'Restore again':'Make this photo sharper';
+  if(b.restored){ $('aiStrength').value=Math.round(b.restored.strength*100); $('aiStrengthV').textContent=$('aiStrength').value+'%'; }
+}
+$('aiStrength').addEventListener('input',()=>{ $('aiStrengthV').textContent=$('aiStrength').value+'%'; });
+$('aiShowOrig').onclick=()=>{ state.aiView='orig'; openPhoto(state.photo); };
+$('aiShowNew').onclick=()=>{ state.aiView='new'; openPhoto(state.photo); };
+$('aiBtn').onclick=async()=>{
+  const ph=curPhoto(); const btn=$('aiBtn'); btn.disabled=true; $('aiProg').hidden=false;
+  const prog=(t,f)=>{ $('aiMsg').textContent=t; $('aiProg').firstElementChild.style.width=(f*100)+'%'; };
+  try{
+    const t0=performance.now();
+    const info=await restorePhoto(ph,(+$('aiStrength').value)/100,prog);
+    $('aiMsg').textContent=`Done in ${Math.round((performance.now()-t0)/1000)} s, ${info.faces} face${info.faces===1?'':'s'} restored. Switch between Original and Restored to compare.`;
+    state.aiView='new'; changedData(); openPhoto(state.photo);
+  }catch(e){ $('aiMsg').textContent='Restore failed: '+(e.message||e); }
+  btn.disabled=false; $('aiProg').hidden=true;
+};
+function toCHW(img,mode){ const {data,width:w,height:h}=img, n=w*h, out=new Float32Array(3*n);
+  for(let i=0;i<n;i++){ for(let c=0;c<3;c++){ const v=data[i*4+c]/255; out[c*n+i]=mode==='pm1'?(v-0.5)/0.5:v; } } return out; }
+function fromCHW(arr,w,h,mode){ const n=w*h, img=new ImageData(w,h), d=img.data;
+  for(let i=0;i<n;i++){ for(let c=0;c<3;c++){ let v=arr[c*n+i]; v=mode==='pm1'?(v*0.5+0.5):v; d[i*4+c]=Math.max(0,Math.min(255,Math.round(v*255))); } d[i*4+3]=255; } return img; }
+function canvasOf(w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+async function esrgan(src,model,scale,onProg){
+  const W=src.width,H=src.height,T=320,P=12;
+  const out=canvasOf(W*scale,H*scale), octx=out.getContext('2d');
+  const tiles=[]; for(let y=0;y<H;y+=T) for(let x=0;x<W;x+=T) tiles.push([x,y]);
+  let i=0;
+  for(const [x,y] of tiles){
+    const x0=Math.max(0,x-P),y0=Math.max(0,y-P),x1=Math.min(W,x+T+P),y1=Math.min(H,y+T+P),tw=x1-x0,th=y1-y0;
+    // the x2 model needs even sizes: pad the tile by repeating its last column/row
+    const pw=tw+(tw&1), phh=th+(th&1), tc=canvasOf(pw,phh), tx=tc.getContext('2d',{willReadFrequently:true});
+    tx.drawImage(src,x0,y0,tw,th,0,0,tw,th);
+    if(pw>tw) tx.drawImage(tc,tw-1,0,1,th,tw,0,1,th);
+    if(phh>th) tx.drawImage(tc,0,th-1,pw,1,0,th,pw,1);
+    const res=await NATIVE.ai(model,toCHW(tx.getImageData(0,0,pw,phh),'01'),[1,3,phh,pw]);
+    const tmp=canvasOf(pw*scale,phh*scale); tmp.getContext('2d').putImageData(fromCHW(res.data,pw*scale,phh*scale,'01'),0,0);
+    const cw=Math.min(T,W-x)*scale, ch=Math.min(T,H-y)*scale;
+    octx.drawImage(tmp,(x-x0)*scale,(y-y0)*scale,cw,ch,x*scale,y*scale,cw,ch);
+    onProg(++i/tiles.length);
+  }
+  return out;
+}
+const FFHQ=[[192.98138,239.94708],[318.90277,240.1936],[256.63416,314.01935],[201.26117,371.41043],[313.08905,371.15118]];
+function similarity(src,dst){ // least-squares similarity src->dst: x'=a x - b y + tx, y'= b x + a y + ty
+  const n=src.length; let mx=0,my=0,nx=0,ny=0; for(let i=0;i<n;i++){ mx+=src[i][0]; my+=src[i][1]; nx+=dst[i][0]; ny+=dst[i][1]; } mx/=n; my/=n; nx/=n; ny/=n;
+  let p=0,q=0,ss=0; for(let i=0;i<n;i++){ const x=src[i][0]-mx,y=src[i][1]-my,u=dst[i][0]-nx,v=dst[i][1]-ny; p+=x*u+y*v; q+=x*v-y*u; ss+=x*x+y*y; }
+  const a=p/ss,b=q/ss; return {a,b,tx:nx-(a*mx-b*my),ty:ny-(b*mx+a*my)};
+}
+async function restorePhoto(ph,strength,onProg){
+  await loadFaceApi();
+  const full=await getFull(ph.s.name);
+  const crop=renderCropTo(full,1,ph.b,0);
+  const L=Math.max(crop.width,crop.height);
+  // pick upscale: tiny photos x4, medium x2, large ones cleaned at about their own size
+  let model='real_esrgan_x2',scale=2,src=crop;
+  if(L<=900){ model='real_esrgan_x4'; scale=4; }
+  else if(L>1800){ const k=1800/L; src=canvasOf(Math.round(crop.width*k),Math.round(crop.height*k)); src.getContext('2d').drawImage(crop,0,0,src.width,src.height); }
+  onProg('Enlarging and removing grain…',0);
+  const up=await esrgan(src,model,scale,f=>onProg('Enlarging and removing grain…',f*0.8));
+  // faces: detect on a ≤2000px copy of the original crop, map into the upscaled image
+  onProg('Restoring faces…',0.82);
+  const det=renderCropTo(full,1,ph.b,2000), r=up.width/det.width;
+  const found=await faceapi.detectAllFaces(det,new faceapi.SsdMobilenetv1Options({minConfidence:0.5,maxResults:60})).withFaceLandmarks();
+  const uctx=up.getContext('2d');
+  const mask=canvasOf(512,512), mk=mask.getContext('2d'); mk.filter='blur(22px)'; mk.fillStyle='#fff'; mk.fillRect(48,40,416,440);
+  let done=0;
+  for(const f of found){
+    if(f.detection.box.width<40) continue;               // too small to restore faithfully
+    const P=f.landmarks.positions, avg=(a,b)=>{ let x=0,y=0; for(let i=a;i<=b;i++){ x+=P[i].x; y+=P[i].y; } return [x/(b-a+1)*r,y/(b-a+1)*r]; };
+    const pts=[avg(36,41),avg(42,47),[P[30].x*r,P[30].y*r],[P[48].x*r,P[48].y*r],[P[54].x*r,P[54].y*r]];
+    const T=similarity(pts,FFHQ);
+    const fc=canvasOf(512,512), fx=fc.getContext('2d',{willReadFrequently:true});
+    fx.setTransform(T.a,T.b,-T.b,T.a,T.tx,T.ty); fx.drawImage(up,0,0); fx.setTransform(1,0,0,1,0,0);
+    const res=await NATIVE.ai('gfpgan_1.4',toCHW(fx.getImageData(0,0,512,512),'pm1'),[1,3,512,512]);
+    const oc=canvasOf(512,512), ox=oc.getContext('2d'); ox.putImageData(fromCHW(res.data,512,512,'pm1'),0,0);
+    ox.globalCompositeOperation='destination-in'; ox.drawImage(mask,0,0);
+    const s2=T.a*T.a+T.b*T.b;
+    uctx.save(); uctx.globalAlpha=strength;
+    uctx.setTransform(T.a/s2,-T.b/s2,T.b/s2,T.a/s2,-(T.a*T.tx+T.b*T.ty)/s2,(T.b*T.tx-T.a*T.ty)/s2);
+    uctx.drawImage(oc,0,0); uctx.restore();
+    done++; onProg(`Restoring faces (${done})…`,0.82+0.15*done/Math.max(1,found.length));
+  }
+  const blob=await new Promise(res=>up.toBlob(res,'image/jpeg',0.93));
+  await ioWrite(restoredPath(ph.b),new Uint8Array(await blob.arrayBuffer()));
+  ph.b.restored={strength,at:new Date().toISOString().slice(0,10),w:up.width,h:up.height,rot:ph.b.rot,sig:geomSig(ph.b)};
+  onProg('Done',1);
+  return {faces:done,w:up.width,h:up.height,model};
+}
+async function aiSelfTest(ids,strength){
+  const out=[]; for(const id of ids){ const ph=allPhotos().find(p=>p.b.id===id); const t0=performance.now();
+    const r=await restorePhoto(ph,strength,()=>{}); out.push({id,...r,sec:+((performance.now()-t0)/1000).toFixed(1)}); }
+  await saveNow(); return out;
+}
+
+
+/* ================= folders: add photos / add folders / output location ================= */
+// long paths are cut on the left; LRM marks keep the slashes in place inside the right-to-left box
+const showPath=p=>'\u200E'+p.replace(/^\/Users\/[^/]+/,'~').replace(/^~\/Library\/CloudStorage\/GoogleDrive-[^/]+\/My Drive/,'Google Drive')+'\u200E';
+function renderFolderPanel(){
+  const src=$('fpSources'); src.innerHTML='';
+  const row=(p,tag,removable,missing)=>{ const d=document.createElement('div'); d.className='frow';
+    const pp=document.createElement('span'); pp.className='p'; pp.title=p; pp.textContent=showPath(p); d.appendChild(pp);
+    const n=state.scans.filter(s=>s.dir===p).length;
+    const t=document.createElement('span'); t.className=missing?'miss':'tag'; t.textContent=missing?'Folder not found':(tag+` · ${n} scan${n===1?'':'s'}`); d.appendChild(t);
+    if(removable){ const b=document.createElement('button'); b.textContent='Remove'; b.onclick=async()=>{
+        if(!confirm('Remove this folder from the album?\nThe folder and its photos are not deleted, and its progress is kept for when you add it back.')) return;
+        state.settings.sources=state.settings.sources.filter(x=>x!==p); await saveSettings(); await refreshScans(false); }; d.appendChild(b); }
+    src.appendChild(d); };
+  row(state.dirPath,'Main folder',false,false);
+  for(const p of state.settings.sources) row(p,'Added folder',true,(state.missing||[]).includes(p));
+  const out=$('fpOutput'); out.innerHTML='';
+  const d=document.createElement('div'); d.className='frow';
+  const pp=document.createElement('span'); pp.className='p'; pp.title=outRoot()||state.dirPath; pp.textContent=showPath(pp.title); d.appendChild(pp);
+  const t=document.createElement('span'); t.className='tag'; t.textContent=outRoot()?'Custom location':'Main folder'; d.appendChild(t);
+  out.appendChild(d);
+  $('fpOutReset').disabled=!outRoot();
+}
+$('folderBtn').onclick=()=>{ renderFolderPanel(); $('folderPanel').classList.add('on'); };
+$('fpClose').onclick=()=>$('folderPanel').classList.remove('on');
+$('folderPanel').addEventListener('click',e=>{ if(e.target.id==='folderPanel') $('folderPanel').classList.remove('on'); });
+window.addEventListener('keydown',e=>{ if(e.key==='Escape') $('folderPanel').classList.remove('on'); });
+
+$('fpAddPhotos').onclick=async()=>{
+  const paths=await NATIVE.pickImages(); if(!paths||!paths.length) return;
+  const names=await NATIVE.copyInto(paths,state.dirPath);
+  await refreshScans(false);
+  renderFolderPanel(); setSave(`Added ${names.length} scan${names.length===1?'':'s'}. Cropping and rotating…`);
+};
+$('fpAddFolder').onclick=async()=>{
+  const p=await NATIVE.pickFolder('Choose a scan folder to add to this album'); if(!p) return;
+  if(p===state.dirPath){ alert('That is the main folder. It is already in the album.'); return; }
+  if(state.settings.sources.includes(p)){ alert('That folder is already added.'); return; }
+  if(p.startsWith(state.dirPath+'/')&&/切好的照片|按人物|AI修复|Cropped Photos|By Person|AI Restored/.test(p)){ alert('That is a folder this app exports to. It cannot be a scan source.'); return; }
+  state.settings.sources.push(p); await saveSettings();
+  const n=await refreshScans(false); renderFolderPanel();
+  if(!n) alert('No scan images (jpg, png, tif) in that folder. Only images directly inside it are read, not subfolders.');
+};
+$('fpRefresh').onclick=async()=>{ const n=await refreshScans(false); renderFolderPanel(); if(!n) alert('No new photos.'); };
+$('fpOutChange').onclick=async()=>{
+  const p=await NATIVE.pickFolder('Choose where to export'); if(!p) return;
+  state.settings.output=(p===state.dirPath)?null:p; await saveSettings(); renderFolderPanel();
+  setSave('Export location changed. The next export goes there.');
+};
+$('fpOutReset').onclick=async()=>{ state.settings.output=null; await saveSettings(); renderFolderPanel(); };
+$('fpSwitch').onclick=async()=>{
+  const p=await NATIVE.pickFolder('Choose the main folder of another album'); if(!p) return;
+  clearTimeout(saveTimer); await saveNow();
+  $('folderPanel').classList.remove('on'); await openNative(p);
+};
+
+// pick up new or removed scan files; returns the number of new scans
+let refreshing=false;
+async function refreshScans(quiet){
+  if(!NATIVE||!state.dirPath||refreshing) return 0; refreshing=true;
+  try{
+    const r=await NATIVE.list(state.dirPath,false); for(const n of r.files) if(!(n in state.files)) state.files[n]=true;
+    const entries=await nativeEntries(), names=new Set(entries.map(e=>e.name));
+    const known=new Map(state.scans.map(s=>[s.name,s]));
+    // scans that disappeared: keep their data aside
+    for(const s of state.scans) if(!names.has(s.name)){ state.orphans[s.name]={width:s.width,height:s.height,done:!!s.done,boxes:s.boxes||[]}; }
+    const added=[];
+    state.scans=entries.map(e=>{ if(known.has(e.name)) return known.get(e.name);
+      const sc=scanFrom(e,state.orphans[e.name]); delete state.orphans[e.name]; if(sc.boxes) sc.boxes.forEach(fixBox); else added.push(sc); return sc; });
+    if(state.cur>=state.scans.length) state.cur=state.scans.length-1;
+    buildArchived(); if(state.archived.length) await archiveMissing().catch(()=>[]);
+    if((state.scans.length||state.archived.length)&&$('welcome').style.display!=='none') enterApp();
+    if(!state.scans.length&&state.view!==4) show(4);
+    renderList(); changedData();
+    if(added.length){ setSave(`Found ${added.length} new scan${added.length===1?'':'s'}. Cropping and rotating…`);
+      for(const s of added){ await ensurePreview(s); renderList(); } }
+    if(state.view===1&&state.cur>=0) selectScan(state.cur);
+    return added.length;
+  } finally { refreshing=false; }
+}
+let lastFocusCheck=0;
+window.addEventListener('focus',()=>{ if(!NATIVE||!state.dirPath) return; const t=Date.now(); if(t-lastFocusCheck<3000) return; lastFocusCheck=t; refreshScans(true); });
+
+
+
+/* ================= undo / redo for crops and rotation ================= */
+const hist={undo:[],redo:[],last:{},store:{}};
+const geomOf=s=>JSON.stringify((s.boxes||[]).map(b=>[b.id,b.cx,b.cy,b.w,b.h,b.angle,b.rot,b.conf]));
+function trackAll(){
+  for(const s of state.scans){
+    for(const b of s.boxes||[]) hist.store[b.id]=b;      // keep box objects so undo brings back their dates and notes
+    const now=geomOf(s), prev=hist.last[s.name];
+    if(prev!==undefined&&prev!==now){ hist.undo.push({scan:s.name,g:prev}); if(hist.undo.length>300) hist.undo.shift(); hist.redo=[]; }
+    hist.last[s.name]=now;
+  }
+  updUndoBtns();
+}
+function applyGeom(s,g){
+  s.boxes=JSON.parse(g).map(([id,cx,cy,w,h,angle,rot,conf])=>{ const b=hist.store[id]||{id}; Object.assign(b,{cx,cy,w,h,angle,rot,conf}); fixBox(b); hist.store[id]=b; return b; });
+  hist.last[s.name]=geomOf(s);
+}
+function undoRedo(from,to,label){
+  const e=from.pop(); if(!e) return; const s=scanByName(e.scan); if(!s) return;
+  to.push({scan:e.scan,g:geomOf(s)}); applyGeom(s,e.g);
+  for(const b of s.boxes) delete filmCache[b.id];
+  state.sel=-1; changedData(); renderList();
+  if(state.view===1){ selectScan(state.scans.indexOf(s)); }
+  else if(state.view===2){ const i=allPhotos().findIndex(p=>p.s===s); const keep=allPhotos()[state.photo]; openPhoto(keep&&keep.s===s?state.photo:Math.max(0,i)); }
+  else if(state.view===4) renderGallery();
+  setSave(`${label} on scan ${state.scans.indexOf(s)+1}`);
+}
+function updUndoBtns(){ for(const id of ['undoBtn','pUndo']) { const b=$(id); if(b) b.disabled=!hist.undo.length; } const r=$('redo2Btn'); if(r) r.disabled=!hist.redo.length; }
+$('undoBtn').onclick=()=>undoRedo(hist.undo,hist.redo,'Undone');
+$('pUndo').onclick=()=>undoRedo(hist.undo,hist.redo,'Undone');
+$('redo2Btn').onclick=()=>undoRedo(hist.redo,hist.undo,'Redone');
+window.addEventListener('keydown',e=>{
+  if(!(e.metaKey||e.ctrlKey)||e.key.toLowerCase()!=='z'||/INPUT|TEXTAREA/.test(e.target.tagName)||$('cropEd').classList.contains('on')) return;
+  e.preventDefault(); if(e.shiftKey) undoRedo(hist.redo,hist.undo,'Redone'); else undoRedo(hist.undo,hist.redo,'Undone');
+});
+
+/* rotate / adjust from the Dates & notes page */
+function rotatePhoto(ph,d){ ph.b.rot=(ph.b.rot+d+4)%4; ph.b.conf='high'; delete filmCache[ph.b.id]; changedData(); openPhoto(state.photo); }
+$('pRotL').onclick=()=>rotatePhoto(curPhoto(),3);
+$('pRotR').onclick=()=>rotatePhoto(curPhoto(),1);
+$('pAdjust').onclick=()=>{ const ph=curPhoto(); openCropEditor(ph.s,ph.b); };
+
+/* restored copies are kept in the orientation they were made in; turn them to match the photo now */
+async function loadRestored(b){
+  const bmp=await createImageBitmap(await fileBlob(restoredPath(b)));
+  const k=(((b.rot||0)-(b.restored.rot||0))%4+4)%4; if(!k) return bmp;
+  const c=document.createElement('canvas'), sw=k%2===1; c.width=sw?bmp.height:bmp.width; c.height=sw?bmp.width:bmp.height;
+  const x=c.getContext('2d'); x.translate(c.width/2,c.height/2); x.rotate(k*Math.PI/2); x.drawImage(bmp,-bmp.width/2,-bmp.height/2); bmp.close&&bmp.close();
+  return c;
+}
+
+/* ================= crop editor: precise manual crop, straighten and turn ================= */
+const ce={s:null,b:null,w:null,hist:[],region:null,k:1,full:null,drag:null};
+const ceCorners=w=>corners(w);
+async function openCropEditor(s,b){
+  ce.s=s; ce.b=b; ce.w={cx:b.cx,cy:b.cy,w:b.w,h:b.h,angle:b.angle,rot:b.rot}; ce.hist=[];
+  $('cropEd').classList.add('on');
+  ce.full=await getFull(s.name);
+  // region around the box: its bounding box plus a margin, kept inside the scan
+  const pts=corners(ce.w), pad=Math.max(ce.w.w,ce.w.h)*0.25;
+  const xs=pts.map(p=>p[0]), ys=pts.map(p=>p[1]);
+  ce.region=[Math.max(0,Math.min(...xs)-pad),Math.max(0,Math.min(...ys)-pad),Math.min(s.width,Math.max(...xs)+pad),Math.min(s.height,Math.max(...ys)+pad)];
+  ceLayout(); ceSync();
+}
+function ceLayout(){
+  const m=$('ceMain'), [x0,y0,x1,y1]=ce.region, W=m.clientWidth-40, H=m.clientHeight-40;
+  ce.k=Math.min(W/(x1-x0),H/(y1-y0));
+  const dw=Math.round((x1-x0)*ce.k), dh=Math.round((y1-y0)*ce.k), ox=Math.round((m.clientWidth-dw)/2), oy=Math.round((m.clientHeight-dh)/2);
+  const cv=$('ceCanvas'), sv=$('ceSvg'), dpr=devicePixelRatio||1;
+  for(const el of [cv,sv]){ el.style.left=ox+'px'; el.style.top=oy+'px'; el.style.width=dw+'px'; el.style.height=dh+'px'; }
+  cv.width=dw*dpr; cv.height=dh*dpr; sv.setAttribute('viewBox',`0 0 ${dw} ${dh}`); sv.setAttribute('width',dw); sv.setAttribute('height',dh);
+  const x=cv.getContext('2d'); x.imageSmoothingQuality='high'; x.fillStyle='#fff'; x.fillRect(0,0,cv.width,cv.height);
+  x.drawImage(ce.full,x0,y0,x1-x0,y1-y0,0,0,cv.width,cv.height);
+}
+const ceToView=([x,y])=>[(x-ce.region[0])*ce.k,(y-ce.region[1])*ce.k];
+function ceDraw(){
+  const sv=$('ceSvg'); sv.innerHTML=''; const w=ce.w, pts=corners(w).map(ceToView);
+  // dim everything outside the crop
+  const W=+sv.getAttribute('width'), H=+sv.getAttribute('height');
+  sv.appendChild(el('path',{d:`M0,0H${W}V${H}H0Z M${pts.map(p=>p.join(',')).join(' L')}Z`,fill:'rgba(0,0,0,.45)','fill-rule':'evenodd'}));
+  const poly=el('polygon',{points:pts.map(p=>p.join(',')).join(' '),fill:'rgba(255,255,255,0.001)',stroke:'#fff','stroke-width':2}); poly.dataset.h='move'; poly.style.cursor='move'; sv.appendChild(poly);
+  const edge=[[0,1],[3,0],[2,3],[1,2]][w.rot%4];
+  sv.appendChild(el('line',{x1:pts[edge[0]][0],y1:pts[edge[0]][1],x2:pts[edge[1]][0],y2:pts[edge[1]][1],stroke:'#ff7a1a','stroke-width':6,'stroke-linecap':'round','pointer-events':'none'}));
+  const mid=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2];
+  const hs=[['c0',pts[0]],['c1',pts[1]],['c2',pts[2]],['c3',pts[3]],['e0',mid(pts[0],pts[1])],['e1',mid(pts[1],pts[2])],['e2',mid(pts[2],pts[3])],['e3',mid(pts[3],pts[0])]];
+  for(const [id,p] of hs){ const r=el('rect',{x:p[0]-8,y:p[1]-8,width:16,height:16,rx:id[0]==='e'?8:2,fill:'#fff',stroke:'#23574e','stroke-width':2}); r.dataset.h=id; r.style.cursor=id[0]==='c'?'nwse-resize':'ew-resize'; sv.appendChild(r); }
+}
+let ceRaf=0;
+function ceSync(){
+  ceDraw(); $('ceTilt').value=ce.w.angle.toFixed(1); $('ceTiltV').textContent=ce.w.angle.toFixed(1)+'°';
+  $('ceUndo').disabled=!ce.hist.length;
+  cancelAnimationFrame(ceRaf); ceRaf=requestAnimationFrame(()=>{ const o=renderCropTo(ce.full,1,ce.w,560), c=$('ceOut'); c.width=o.width; c.height=o.height; c.getContext('2d').drawImage(o,0,0); });
+}
+const cePush=()=>{ ce.hist.push({...ce.w}); if(ce.hist.length>100) ce.hist.shift(); };
+const ceSv=$('ceSvg');
+function ceScan(ev){ const r=ceSv.getBoundingClientRect(); return [ce.region[0]+(ev.clientX-r.left)/ce.k, ce.region[1]+(ev.clientY-r.top)/ce.k]; }
+ceSv.addEventListener('pointerdown',ev=>{
+  const h=ev.target.dataset.h; if(!h) return; ceSv.setPointerCapture(ev.pointerId); cePush();
+  const w=ce.w; ce.drag={h,p0:ceScan(ev),c:[w.cx,w.cy],a:w.angle*Math.PI/180,x0:-w.w/2,x1:w.w/2,y0:-w.h/2,y1:w.h/2};
+});
+ceSv.addEventListener('pointermove',ev=>{
+  const d=ce.drag; if(!d) return; const p=ceScan(ev), w=ce.w;
+  if(d.h==='move'){ w.cx=d.c[0]+p[0]-d.p0[0]; w.cy=d.c[1]+p[1]-d.p0[1]; ceSync(); return; }
+  const c=Math.cos(d.a), s=Math.sin(d.a), dx=p[0]-d.c[0], dy=p[1]-d.c[1];
+  const lx=dx*c+dy*s, ly=-dx*s+dy*c, MIN=30;
+  let {x0,x1,y0,y1}=d;
+  const L=()=>{x0=Math.min(lx,x1-MIN);}, R=()=>{x1=Math.max(lx,x0+MIN);}, T=()=>{y0=Math.min(ly,y1-MIN);}, B=()=>{y1=Math.max(ly,y0+MIN);};
+  ({c0:()=>{L();T();},c1:()=>{R();T();},c2:()=>{R();B();},c3:()=>{L();B();},e0:T,e1:R,e2:B,e3:L})[d.h]();
+  const mx=(x0+x1)/2, my=(y0+y1)/2;
+  w.cx=d.c[0]+mx*c-my*s; w.cy=d.c[1]+mx*s+my*c; w.w=x1-x0; w.h=y1-y0; ceSync();
+});
+ceSv.addEventListener('pointerup',()=>{ ce.drag=null; });
+$('ceTilt').addEventListener('pointerdown',()=>cePush());
+$('ceTilt').addEventListener('keydown',()=>cePush());
+$('ceTilt').addEventListener('input',()=>{ ce.w.angle=+$('ceTilt').value; ceSync(); });
+$('ceTilt0').onclick=()=>{ cePush(); ce.w.angle=0; ceSync(); };
+$('ceSnap').onclick=()=>{ cePush(); const r=refineBox(ce.full,ce.w); Object.assign(ce.w,{cx:r.cx,cy:r.cy,w:r.w,h:r.h,angle:r.angle}); ceSync(); };
+$('ceL').onclick=()=>{ cePush(); ce.w.rot=(ce.w.rot+3)%4; ceSync(); };
+$('ceR').onclick=()=>{ cePush(); ce.w.rot=(ce.w.rot+1)%4; ceSync(); };
+$('ceUndo').onclick=()=>{ const w=ce.hist.pop(); if(w){ ce.w=w; ceSync(); } };
+function ceClose(){ $('cropEd').classList.remove('on'); ce.drag=null; }
+$('ceCancel').onclick=ceClose;
+$('ceDone').onclick=()=>{
+  const b=ce.b; Object.assign(b,ce.w); b.conf='high'; delete filmCache[b.id]; ceClose();
+  changedData(); renderList();
+  if(state.view===1){ drawOverlay(); renderCrops(); } else if(state.view===2) openPhoto(state.photo); else if(state.view===4) renderGallery();
+};
+window.addEventListener('keydown',e=>{
+  if(!$('cropEd').classList.contains('on')) return;
+  if(e.key==='Escape'){ ceClose(); } else if(e.key==='Enter'&&e.target.tagName!=='BUTTON'){ $('ceDone').click(); }
+  else if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'){ $('ceUndo').click(); } else return;
+  e.preventDefault(); e.stopImmediatePropagation();
+},true);
+window.addEventListener('resize',()=>{ if($('cropEd').classList.contains('on')){ ceLayout(); ceSync(); } });
+
+
+/* ================= back of the photo ================= */
+state.sideView='front';
+const BACK_DIR='Backs';
+function updateBackPanel(b){
+  $('backNone').hidden=!!b.back; $('backHas').hidden=!b.back; $('sideRow').hidden=!b.back;
+  $('backSame').hidden=!state.lastBack; if(state.lastBack) $('backSame').textContent=`From the same back scan (${state.lastBack.name})`;
+  $('sideFront').classList.toggle('on',state.sideView!=='back'); $('sideBack').classList.toggle('on',state.sideView==='back');
+  document.querySelector('#editor .fix').hidden=!!(b.back&&state.sideView==='back');   // front rotate/crop buttons only while the front is shown
+  if(b.back){ fileBlob(b.back.file).then(bl=>{ const u=URL.createObjectURL(bl); const im=$('backThumb'); if(im.dataset.u) URL.revokeObjectURL(im.dataset.u); im.dataset.u=u; im.src=u; }).catch(()=>{}); }
+}
+$('sideFront').onclick=()=>{ state.sideView='front'; openPhoto(state.photo); };
+$('sideBack').onclick=()=>{ state.sideView='back'; openPhoto(state.photo); };
+$('backThumb').onclick=()=>{ state.sideView='back'; openPhoto(state.photo); };
+async function pickBackScan(){
+  if(NATIVE){ const ps=await NATIVE.pickImages(); if(!ps||!ps.length) return null; const p=ps[0], i=p.lastIndexOf('/');
+    return {name:p.slice(i+1), blob:new Blob([await NATIVE.read(p.slice(0,i),p.slice(i+1))])}; }
+  return await new Promise(res=>{ const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
+    inp.onchange=()=>{ const f=inp.files[0]; res(f?{name:f.name,blob:f}:null); }; inp.click(); });
+}
+async function loadBackScan(picked){
+  const full=await createImageBitmap(picked.blob);
+  const k=1600/Math.max(full.width,full.height), pc=canvasOf(Math.round(full.width*k),Math.round(full.height*k));
+  pc.getContext('2d').drawImage(full,0,0,pc.width,pc.height); const pv=await createImageBitmap(pc);
+  const boxes=autoDetect(pv,full.width/pv.width);
+  return {name:picked.name,full,pv,boxes,used:new Set()};
+}
+// let the user click which detected photo on the back scan belongs to this photo
+function chooseBack(sc){
+  return new Promise(res=>{
+    if(sc.boxes.length===1&&!sc.used.size) return res(sc.boxes[0]);
+    const cv=$('bpCanvas'), sv=$('bpSvg'); cv.width=sc.pv.width; cv.height=sc.pv.height; cv.getContext('2d').drawImage(sc.pv,0,0);
+    $('backPick').classList.add('on');
+    requestAnimationFrame(()=>{
+      const r=cv.getBoundingClientRect(), k=r.width/sc.full.width; sv.setAttribute('width',r.width); sv.setAttribute('height',r.height); sv.innerHTML='';
+      sc.boxes.forEach((b,i)=>{ const pts=corners(b).map(([x,y])=>[x*k,y*k]), used=sc.used.has(i);
+        const g=el('g',{}); g.style.cursor='pointer';
+        g.appendChild(el('polygon',{points:pts.map(p=>p.join(',')).join(' '),fill:used?'rgba(0,0,0,.35)':'rgba(37,99,201,.12)',stroke:used?'#888':'#2563c9','stroke-width':3}));
+        const cx=b.cx*k, cy=b.cy*k; g.appendChild(el('circle',{cx,cy,r:18,fill:used?'#888':'#2563c9'}));
+        const t=el('text',{x:cx,y:cy+6,'text-anchor':'middle',fill:'#fff','font-size':17,'font-weight':700}); t.textContent=used?'✓':i+1; g.appendChild(t);
+        g.onclick=()=>{ done(b); sc.used.add(i); }; sv.appendChild(g); });
+    });
+    const done=v=>{ $('backPick').classList.remove('on'); $('bpWhole').onclick=$('bpCancel').onclick=null; res(v); };
+    $('bpWhole').onclick=()=>done({cx:sc.full.width/2,cy:sc.full.height/2,w:sc.full.width,h:sc.full.height,angle:0,rot:0,whole:true});
+    $('bpCancel').onclick=()=>done(null);
+  });
+}
+async function saveBack(b,canvas){
+  const bytes=new Uint8Array(await (await new Promise(r=>canvas.toBlob(r,'image/jpeg',0.92))).arrayBuffer());
+  const file=`${BACK_DIR}/${b.id}.jpg`; await ioWrite(file,bytes);
+  b.back={file,w:canvas.width,h:canvas.height,at:Date.now()}; delete galCache[b.id];
+}
+async function addBack(useLast){
+  const ph=curPhoto(); if(!ph) return;
+  try{
+    let sc=useLast?state.lastBack:null;
+    if(!sc){ const picked=await pickBackScan(); if(!picked) return; setSave('Finding the photo on the back scan…'); sc=await loadBackScan(picked); state.lastBack=sc; }
+    const box=await chooseBack(sc); if(!box){ setSave(''); return; }
+    const fixed=box.whole?box:refineBox(sc.full,{...box,rot:0});
+    await saveBack(ph.b,renderCropTo(sc.full,1,{...fixed,rot:0},0));
+    state.sideView='back'; changedData(); openPhoto(state.photo); setSave('Back added');
+  }catch(e){ alert('Could not add the back: '+(e.message||e)); }
+}
+$('backAdd').onclick=()=>addBack(false);
+$('backSame').onclick=()=>addBack(true);
+$('backReplace').onclick=()=>addBack(false);
+$('backRemove').onclick=()=>{ const ph=curPhoto(); if(!confirm('Remove the back of this photo?')) return; ph.b.back=null; state.sideView='front'; delete galCache[ph.b.id]; changedData(); openPhoto(state.photo); };
+async function rotateBack(d){
+  const ph=curPhoto(); if(!ph.b.back) return;
+  const src=await createImageBitmap(await fileBlob(ph.b.back.file));
+  await saveBack(ph.b,turned((()=>{ const c=canvasOf(src.width,src.height); c.getContext('2d').drawImage(src,0,0); return c; })(),d));
+  state.sideView='back'; changedData(); openPhoto(state.photo);
+}
+$('backRotL').onclick=()=>rotateBack(3);
+$('backRotR').onclick=()=>rotateBack(1);
+
+/* ================= gallery ================= */
+// pixel size of the cropped photo as it is exported (turned the right way up)
+function pxSize(b){ const sw=b.rot%2===1; return {w:Math.round(sw?b.h:b.w),h:Math.round(sw?b.w:b.h)}; }
+function restoredPx(b){ if(!restoredOK(b)||!b.restored.w) return null; const k=(((b.rot||0)-(b.restored.rot||0))%4+4)%4;
+  return k%2?{w:b.restored.h,h:b.restored.w}:{w:b.restored.w,h:b.restored.h}; }
+const fmtPx=p=>`${p.w.toLocaleString('en')} × ${p.h.toLocaleString('en')} px`;
+const fmtCm=(p,dpi)=>dpi?`${(p.w/dpi*2.54).toFixed(1)} × ${(p.h/dpi*2.54).toFixed(1)} cm`:'';
+const mp=p=>(p.w*p.h/1e6).toFixed(1)+' MP';
+const gal={filter:'all',person:'',q:'',list:[],idx:0,view:'new'};
+const isEdited=b=>!!(b.note&&b.note.trim())||b.dateSrc==='user'||restoredOK(b)||!!b.back;
+function galPhotos(){
+  const q=gal.q.trim().toLowerCase();
+  return galAll().filter(ph=>{
+    const b=ph.b;
+    if(gal.filter==='edited'&&!isEdited(b)) return false;
+    if(gal.filter==='restored'&&!restoredOK(b)) return false;
+    if(gal.filter==='notes'&&!(b.note&&b.note.trim())) return false;
+    if(gal.filter==='back'&&!b.back) return false;
+    if(gal.person&&!peopleInBox(b.id).includes(gal.person)) return false;
+    if(q&&!((b.note||'').toLowerCase().includes(q)||(b.date||'').toLowerCase().includes(q)||peopleInBox(b.id).join(' ').toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+const galCache={};
+async function galThumb(ph){
+  const b=ph.b, key=[b.id,b.rot,b.angle,b.w,b.h,b.cx,b.cy,restoredOK(b)?b.restored.at+b.restored.strength:''].join('|');
+  if(galCache[b.id]&&galCache[b.id].key===key) return galCache[b.id].url;
+  let c;
+  if(restoredOK(b)){ try{ const bmp=await loadRestored(b);
+      const k=400/Math.max(bmp.width,bmp.height); c=canvasOf(Math.round(bmp.width*k),Math.round(bmp.height*k)); c.getContext('2d').drawImage(bmp,0,0,c.width,c.height); bmp.close&&bmp.close(); }catch(e){} }
+  if(!c&&ph.arch){ try{ const bmp=await createImageBitmap(await fileBlob(archPath(b)));
+      const k=Math.min(1,400/Math.max(bmp.width,bmp.height)); c=canvasOf(Math.round(bmp.width*k),Math.round(bmp.height*k)); c.getContext('2d').drawImage(bmp,0,0,c.width,c.height); bmp.close&&bmp.close(); }catch(e){ return ''; } }
+  if(!c){ const pv=await ensurePreview(ph.s); c=renderCropTo(pv,pv.width/ph.s.width,b,400); }
+  const url=c.toDataURL('image/jpeg',.82); galCache[b.id]={key,url}; return url;
+}
+function renderGallery(){
+  // person picker
+  const sel=$('galPerson'), names=[...new Set(Object.values(state.faces.people))].sort((a,b)=>a.localeCompare(b));
+  if(gal.person&&!names.includes(gal.person)) gal.person='';
+  sel.innerHTML='<option value="">Everyone</option>'+names.map(n=>`<option>${n.replace(/</g,'&lt;')}</option>`).join('');
+  sel.value=gal.person; sel.hidden=!names.length;
+  document.querySelectorAll('#galFilter button').forEach(b=>b.classList.toggle('on',b.dataset.f===gal.filter));
+  const list=galPhotos(), all=galAll().length; gal.list=list;
+  $('galCount').textContent=list.length===all?`${all} photos`:`${list.length} of ${all} photos`;
+  const box=$('galScroll'); box.innerHTML='';
+  if(!list.length){ box.innerHTML=`<div class="galempty">${gal.filter==='restored'?'No AI-restored photos yet. Use “Make this photo sharper” on the Dates &amp; notes page.':gal.filter==='edited'?'Nothing edited yet. Add a date or a note on the Dates &amp; notes page and it shows up here.':'No photos match.'}</div>`; return; }
+  // group by decade, oldest first; photos without a year go last
+  const yearNum=b=>{ const y=yearOf(b.date); return y?+y:9999; };
+  const order=list.map((ph,i)=>({ph,i,y:yearNum(ph.b)})).sort((a,b)=>a.y-b.y||a.i-b.i);
+  gal.list=order.map(o=>o.ph);
+  const groups=new Map();
+  for(const o of order){ const k=o.y===9999?'Year unknown':`${Math.floor(o.y/10)*10}s`; if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(o); }
+  const io=new IntersectionObserver(es=>{ for(const e of es) if(e.isIntersecting){ io.unobserve(e.target); const ph=gal.list[+e.target.dataset.i]; galThumb(ph).then(u=>{ e.target.querySelector('img').src=u; }); } },{root:box,rootMargin:'600px'});
+  let n=0, lastY=null; gal.anchors=[];
+  for(const [k,items] of groups){
+    const h=document.createElement('div'); h.className='decade'; h.innerHTML=`<h2>${k}</h2><span>${items.length} photo${items.length===1?'':'s'}</span>`; box.appendChild(h);
+    const g=document.createElement('div'); g.className='galgrid';
+    for(const o of items){
+      const b=o.ph.b, i=n++, y=yearOf(b.date), who=peopleInBox(b.id);
+      const p=document.createElement('button'); p.className='gp'; p.dataset.i=i;
+      const ar=(b.rot%2?b.h/b.w:b.w/b.h)||1.4;
+      p.innerHTML=`<img alt="" style="width:${Math.round(170*ar)}px">${y?`<span class="y">${parseDate(b.date).approx?'c.':''}'${y.slice(2)}</span>`:''}
+        <span class="tags">${restoredOK(b)?'<i>AI</i>':''}${b.note&&b.note.trim()?'<i>Note</i>':''}${b.back?'<i>Back</i>':''}</span>
+        <div class="px">${(()=>{ const p=pxSize(b), r=restoredPx(b); return `${p.w} × ${p.h}`+(r?` · <b>AI ${r.w} × ${r.h}</b>`:''); })()}</div>
+        <div class="cap" style="width:${Math.round(170*ar)}px">${(b.note||'').split('\n')[0].replace(/</g,'&lt;')||who.join(', ').replace(/</g,'&lt;')||'&nbsp;'}</div>`;
+      p.setAttribute('aria-label',`Photo${y?' from '+y:''}${who.length?' with '+who.join(', '):''}`);
+      p.onclick=()=>openLightbox(i);
+      { const yy=y||'Unknown'; if(yy!==lastY){ lastY=yy; p.classList.add('yearmark'); p.dataset.year=y?yy:'Year unknown'; gal.anchors.push({y:yy,el:p,dec:k}); } }
+      g.appendChild(p); io.observe(p);
+    }
+    box.appendChild(g);
+  }
+  requestAnimationFrame(buildRail);
+}
+/* ---------- timeline rail: drag (or click) to jump through the years ---------- */
+function railData(){
+  const box=$('galScroll'), max=Math.max(1,box.scrollHeight-box.clientHeight);
+  return (gal.anchors||[]).map(a=>({...a,top:Math.max(0,Math.min(max,a.el.offsetTop-box.offsetTop-40))})).map(a=>({...a,f:a.top/max}));
+}
+function buildRail(){
+  const t=$('galTicks'); if(!t) return; t.innerHTML=''; const H=$('galRail').clientHeight; if(!H) return;
+  const data=railData(); gal.rail=data; let lastPx=-99; const seenDec=new Set();
+  // decades first so they always get a label, then years where there is room
+  const marks=[];
+  for(const a of data){ const isDec=!seenDec.has(a.dec); seenDec.add(a.dec); marks.push({...a,isDec}); }
+  const placed=[];
+  for(const pass of [true,false]) for(const m of marks){ if(m.isDec!==pass) continue; const px=m.f*H;
+    if(placed.some(q=>Math.abs(q-px)<(pass?16:14))) continue; placed.push(px);
+    const sp=document.createElement('span'); sp.className=m.isDec?'dec':''; sp.style.top=px+'px';
+    sp.textContent=m.isDec?(m.dec==='Year unknown'?'?':m.dec):(m.y==='Unknown'?'?':"'"+String(m.y).slice(2)); t.appendChild(sp); }
+  railSync();
+}
+function yearAt(scrollTop){ let cur=null; for(const a of gal.rail||[]) if(a.top<=scrollTop+5) cur=a; return cur||(gal.rail||[])[0]; }
+function railSync(){
+  const box=$('galScroll'), rail=$('galRail'); if(!rail.clientHeight) return;
+  const max=Math.max(1,box.scrollHeight-box.clientHeight), f=box.scrollTop/max, y=f*rail.clientHeight;
+  $('galThumb').style.top=Math.max(17,Math.min(rail.clientHeight-17,y))+'px';
+  const a=yearAt(box.scrollTop); const b=$('galBubble'); b.style.top=Math.max(14,Math.min(rail.clientHeight-14,y))+'px';
+  b.textContent=a?(a.y==='Unknown'?'Year unknown':a.y):'';
+}
+$('galScroll').addEventListener('scroll',()=>{ if(!gal.railRaf) gal.railRaf=requestAnimationFrame(()=>{ gal.railRaf=0; railSync(); }); },{passive:true});
+{ const rail=$('galRail');
+  const jump=e=>{ const r=rail.getBoundingClientRect(), f=Math.max(0,Math.min(1,(e.clientY-r.top)/r.height)), box=$('galScroll');
+    // snap to the nearest year mark when close, so a click lands on a year's first photo
+    const max=box.scrollHeight-box.clientHeight; let top=f*max;
+    let best=null; for(const a of gal.rail||[]) if(Math.abs(a.f-f)*r.height<10&&(!best||Math.abs(a.f-f)<Math.abs(best.f-f))) best=a;
+    if(best) top=best.top; box.scrollTop=top; railSync(); };
+  rail.addEventListener('pointerdown',e=>{ rail.setPointerCapture(e.pointerId); rail.classList.add('drag'); jump(e); });
+  rail.addEventListener('pointermove',e=>{ if(rail.classList.contains('drag')) jump(e); });
+  const end=()=>rail.classList.remove('drag'); rail.addEventListener('pointerup',end); rail.addEventListener('pointercancel',end);
+  rail.addEventListener('keydown',e=>{ const box=$('galScroll'), d=gal.rail||[]; if(!d.length) return;
+    const i=d.indexOf(yearAt(box.scrollTop));
+    if(e.key==='ArrowDown'||e.key==='PageDown'){ box.scrollTop=d[Math.min(d.length-1,i+1)].top; }
+    else if(e.key==='ArrowUp'||e.key==='PageUp'){ box.scrollTop=d[Math.max(0,i-1)].top; }
+    else if(e.key==='Home') box.scrollTop=0; else if(e.key==='End') box.scrollTop=box.scrollHeight; else return;
+    e.preventDefault(); railSync(); });
+  window.addEventListener('resize',()=>{ if(state.view===4) requestAnimationFrame(buildRail); });
+}
+$('galFilter').addEventListener('click',e=>{ const f=e.target.dataset&&e.target.dataset.f; if(!f) return; gal.filter=f; renderGallery(); });
+$('galPerson').onchange=()=>{ gal.person=$('galPerson').value; renderGallery(); };
+let galT=null; $('galSearch').addEventListener('input',()=>{ clearTimeout(galT); galT=setTimeout(()=>{ gal.q=$('galSearch').value; renderGallery(); },200); });
+
+async function openLightbox(i){
+  if(!gal.list.length) return;
+  gal.idx=(i+gal.list.length)%gal.list.length; const ph=gal.list[gal.idx], b=ph.b;
+  $('lightbox').classList.add('on');
+  $('lbPos').textContent=`${gal.idx+1} of ${gal.list.length}`;
+  $('lbDate').textContent=b.date||'—';
+  $('lbDateSrc').textContent={stamp:'Printed on the photo',guess:'Estimated',user:'Entered by you'}[b.dateSrc]||'';
+  $('lbNote').textContent=(b.note||'').trim()||'—';
+  const who=peopleInBox(b.id); $('lbPeople').textContent=who.length?who.join(', '):'—';
+  $('lbFrom').textContent=ph.arch?`${ph.s.file}, photo ${ph.i+1}\n(the scan is no longer in the folder; this is the saved crop)`:`Scan ${state.scans.indexOf(ph.s)+1}, photo ${ph.i+1}`;
+  lbEditClose();
+  { const p=pxSize(b), r=restoredPx(b), dpi=ph.s.dpi;
+    const lines=[`Original: ${fmtPx(p)} (${mp(p)})`];
+    if(dpi) lines.push(`Real size ${fmtCm(p,dpi)}, scanned at ${dpi} dpi`);
+    if(r) lines.push(`AI restored: ${fmtPx(r)} (${mp(r)})`);
+    $('lbSizeV').textContent=lines.join('\n'); }
+  $('lbView').hidden=!restoredOK(b)||gal.side==='back';
+  $('lbSideRow').hidden=!b.back; $('lbFront').classList.toggle('on',gal.side!=='back'); $('lbBack').classList.toggle('on',gal.side==='back');
+  $('lbOrig').classList.toggle('on',gal.view!=='new'); $('lbNew').classList.toggle('on',gal.view==='new');
+  const cv=$('lbCanvas'), idx=gal.idx;
+  const draw=src=>{ const k=Math.min(1,2000/Math.max(src.width,src.height)); cv.width=Math.round(src.width*k); cv.height=Math.round(src.height*k); cv.getContext('2d').drawImage(src,0,0,cv.width,cv.height); };
+  if(b.back&&gal.side==='back'){ try{ const bmp=await createImageBitmap(await fileBlob(b.back.file)); if(gal.idx!==idx) return; draw(bmp); bmp.close&&bmp.close(); return; }catch(e){} }
+  if(ph.arch){
+    if(restoredOK(b)&&gal.view==='new'){ try{ const bmp=await loadRestored(b); if(gal.idx!==idx) return; draw(bmp); bmp.close&&bmp.close(); return; }catch(e){} }
+    try{ const bmp=await createImageBitmap(await fileBlob(archPath(b))); if(gal.idx!==idx) return; draw(bmp); bmp.close&&bmp.close(); }catch(e){ cv.width=cv.height=1; }
+    return;
+  }
+  const pv=await ensurePreview(ph.s); if(gal.idx!==idx) return; draw(renderCropTo(pv,pv.width/ph.s.width,b,1600));
+  if(restoredOK(b)&&gal.view==='new'){ try{ const bmp=await loadRestored(b); if(gal.idx!==idx) return; draw(bmp); bmp.close&&bmp.close(); return; }catch(e){} }
+  const full=await getFull(ph.s.name); if(gal.idx!==idx) return; draw(renderCropTo(full,1,b,2000));
+}
+function closeLightbox(){ $('lightbox').classList.remove('on'); }
+$('lbClose').onclick=closeLightbox;
+$('lbPrev').onclick=()=>openLightbox(gal.idx-1);
+$('lbNext').onclick=()=>openLightbox(gal.idx+1);
+$('lbFront').onclick=()=>{ gal.side='front'; openLightbox(gal.idx); };
+$('lbBack').onclick=()=>{ gal.side='back'; openLightbox(gal.idx); };
+$('lbOrig').onclick=()=>{ gal.view='orig'; openLightbox(gal.idx); };
+$('lbNew').onclick=()=>{ gal.view='new'; openLightbox(gal.idx); };
+$('lbEdit').onclick=()=>{ const ph=gal.list[gal.idx];
+  if(ph.arch){ lbEditOpen(ph); return; }   // its scan is gone, so edit right here
+  closeLightbox(); const i=allPhotos().findIndex(p=>p.b.id===ph.b.id); state.photo=Math.max(0,i); show(2); };
+function lbEditOpen(ph){
+  const b=ph.b, f=$('lbForm'); f.hidden=false; $('lbEdit').hidden=true;
+  $('lbDateIn').value=b.date||''; $('lbNoteIn').value=b.note||''; $('lbDateIn').focus();
+  $('lbSave').onclick=()=>{ const d=$('lbDateIn').value.trim(), n=$('lbNoteIn').value;
+    if(d!==(b.date||'')){ b.date=d; b.dateSrc=d?'user':''; }
+    b.note=n; delete galCache[b.id]; changedData(); renderGallery(); openLightbox(gal.list.findIndex(p=>p.b.id===b.id)); };
+  $('lbCancel').onclick=lbEditClose;
+}
+function lbEditClose(){ $('lbForm').hidden=true; $('lbEdit').hidden=false; }
+$('lbStage').addEventListener('click',e=>{ if(e.target.id==='lbStage') closeLightbox(); });
+window.addEventListener('keydown',e=>{
+  if(!$('lightbox').classList.contains('on')) return;
+  if(/^(INPUT|TEXTAREA)$/.test((e.target&&e.target.tagName)||'')&&e.key!=='Escape') return;
+  if(e.key==='Escape') closeLightbox(); else if(e.key==='ArrowRight') openLightbox(gal.idx+1); else if(e.key==='ArrowLeft') openLightbox(gal.idx-1); else return;
+  e.preventDefault(); e.stopImmediatePropagation();
+},true);
+
+/* ================= export dialog: pick or reset the location right before exporting ================= */
+function renderExportDlg(){
+  const box=$('exWhere'); box.innerHTML='';
+  const d=document.createElement('div'); d.className='frow';
+  const p=document.createElement('span'); p.className='p'; p.title=outRoot()||state.dirPath; p.textContent=showPath(p.title); d.appendChild(p);
+  const t=document.createElement('span'); t.className='tag'; t.textContent=outRoot()?'Custom location':'Main folder (original)'; d.appendChild(t);
+  box.appendChild(d); $('exReset').disabled=!outRoot();
+}
+const exLayout=()=>(state.settings&&state.settings.layout)||'year';
+function renderLayout(){ document.querySelectorAll('#exLayout button').forEach(b=>b.classList.toggle('on',b.dataset.l===exLayout())); }
+$('exLayout').addEventListener('click',async e=>{ const l=e.target.dataset&&e.target.dataset.l; if(!l) return; state.settings=state.settings||{sources:[],output:null}; state.settings.layout=l; renderLayout(); if(NATIVE&&state.dirPath) await saveSettings(); });
+function openExportDlg(){ renderExportDlg(); renderLayout(); $('exportDlg').classList.add('on'); $('exGo').focus(); }
+$('exCancel').onclick=()=>$('exportDlg').classList.remove('on');
+$('exportDlg').addEventListener('click',e=>{ if(e.target.id==='exportDlg') $('exportDlg').classList.remove('on'); });
+$('exChange').onclick=async()=>{ const p=await NATIVE.pickFolder('Choose where to export'); if(!p) return;
+  state.settings.output=(p===state.dirPath)?null:p; await saveSettings(); renderExportDlg(); };
+$('exReset').onclick=async()=>{ state.settings.output=null; await saveSettings(); renderExportDlg(); };
+$('exGo').onclick=()=>{ $('exportDlg').classList.remove('on'); runExport(); };
+window.addEventListener('keydown',e=>{ if(e.key==='Escape') $('exportDlg').classList.remove('on'); });
+
+/* ================= online updates ================= */
+if(NATIVE&&NATIVE.onUpdate){
+  NATIVE.onUpdate(info=>{
+    const bar=$('updBar');
+    if(info.status==='ready'){ $('updText').textContent=`Version ${info.version} is ready.${info.notes?' '+info.notes:''} Your work is saved, so restarting is safe.`; $('updGo').hidden=false; }
+    else { $('updText').textContent=`Version ${info.version} needs a new installer: download the latest Old Photo Scan DMG.`; $('updGo').hidden=true; }
+    bar.classList.add('on');
+  });
+  $('updLater').onclick=()=>$('updBar').classList.remove('on');
+  $('updGo').onclick=async()=>{ clearTimeout(saveTimer); if(state.dirPath) await saveNow(); NATIVE.restartApp(); };
+  NATIVE.appVersion().then(v=>{ $('verText').textContent=`Version ${v.ui}`+(v.ui!==v.app?` (app ${v.app})`:''); });
+  $('verCheck').onclick=async()=>{ $('verCheck').disabled=true; const r=await NATIVE.checkUpdate(); $('verCheck').disabled=false;
+    $('verText').textContent={current:`Version ${r.version}: up to date`,ready:`Version ${r.version} downloaded`,reinstall:`Version ${r.version} needs a new installer`,off:'Online updates are off',error:'Could not check for updates','bad-signature':'Update rejected: bad signature'}[r.status]||''; };
+} else { const v=$('verLine'); if(v) v.hidden=true; }
+
+/* ================= export ================= */
+function showProg(t,f){ $('progress').style.display='flex'; $('progText').textContent=t; $('progBar').style.width=(f*100)+'%'; }
+function hideProg(){ $('progress').style.display='none'; }
+const outName=(s,i)=>(s.label?safe(s.label)+'_':'')+(s.file||s.name).replace(/\.[^.]+$/,'')+'_'+String(i+1).padStart(2,'0')+'.jpg';
+const outRoot=()=>(NATIVE&&state.settings&&state.settings.output)||null;
+async function outWrite(rel,data){ const r=outRoot(); return r?NATIVE.write(r,rel,data):ioWrite(rel,data); }
+const safe=s=>s.replace(/[\\/:*?"<>|]/g,'_').trim()||'Unnamed';
+
+async function runExport(){
+  let lostIds=new Set();
+  if(NATIVE&&state.dirPath){
+    showProg('Saving copies of photos whose scans were removed…',0);
+    const lost=await archiveMissing().catch(()=>[]); hideProg(); lostIds=new Set(lost.map(ph=>ph.b.id));
+    if(lost.length&&!confirm(`${lost.length} photo${lost.length===1?' has':'s have'} no scan and no saved copy any more (for example ${outName(lost[0].s,lost[0].i)}).\n\nIf you export now, their old files in “${OUT_DIR}” will be removed. Put their scans back first if you want to keep them.\n\nExport anyway?`)) return;
+  }
+  const arch=(state.archived||[]).filter(ph=>!lostIds.has(ph.b.id));
+  const list=allPhotos().concat(arch); if(!list.length) return;
+  const zip=[], canWrite=!!state.dir;
+  const made=new Set();
+  if(canWrite){ try{
+      if(outRoot()) await NATIVE.clearOutputs(outRoot(),OUT_DIR,PEOPLE_DIR); else await ioClearOutputs();
+      // folders this app made inside Cropped Photos last time (year or decade folders) are rebuilt too
+      const prev=(state.settings&&state.settings.madeDirs)||[], root=outRoot()||state.dirPath;
+      for(const d of prev){ if(!d.startsWith(OUT_DIR+'/')) continue;
+        if(NATIVE) await NATIVE.clearOutputs(root,d,d);
+        else { try{ const od=await state.dir.getDirectoryHandle(OUT_DIR); await od.removeEntry(d.slice(OUT_DIR.length+1),{recursive:true}); }catch(e){} } }
+    }catch(e){ alert('Cannot write to the export location: '+e.message+'\nCheck it under Folders.'); return; } }
+  const rows=[['File','From scan','Date','Date source','Notes','People','Back scanned']];
+  let n=0, copies=0, nRestored=0, nBack=0; const problems=[];
+  try{
+    const jobs=state.scans.filter(s=>s.boxes&&s.boxes.length).map(s=>({s,boxes:s.boxes.map((b,i)=>({b,i}))}));
+    { const byScan=new Map(); for(const ph of arch){ if(!byScan.has(ph.s)) byScan.set(ph.s,[]); byScan.get(ph.s).push({b:ph.b,i:ph.i}); }
+      for(const [sc,bx] of byScan) jobs.push({s:sc,boxes:bx,arch:true}); }
+    for(const job of jobs){
+      const s=job.s, full=job.arch?null:await getFull(s.name);
+      for(const {b,i} of job.boxes){
+        const nm=outName(s,i);
+        showProg(`Exporting photo ${n+1} of ${list.length}`, n/list.length);
+        let raw;
+        if(job.arch){ try{ raw=stripExif(new Uint8Array(await (await fileBlob(archPath(b))).arrayBuffer())); }catch(e){ problems.push(`${nm}: saved copy missing`); continue; } }
+        else { const c=renderCropTo(full,1,b,0);
+          raw=new Uint8Array(await (await new Promise(r=>c.toBlob(r,'image/jpeg',0.95))).arrayBuffer());
+          c.width=c.height=0; }
+        const jpg=withExif(raw,b.note,b.date);
+        const who=peopleInBox(b.id), year=yearOf(b.date)||'Unknown year';
+        const sub=exLayout()==='flat'?'':(exLayout()==='decade'?(yearOf(b.date)?Math.floor(+yearOf(b.date)/10)*10+'s':'Unknown year'):year);
+        const OD=OUT_DIR+(sub?'/'+sub:''); if(sub) made.add(OUT_DIR+'/'+sub);
+        if(canWrite){ await outWrite(OD+'/'+nm,jpg); for(const p of who){ await outWrite(`${PEOPLE_DIR}/${safe(p)}/${year}/${nm}`,jpg); copies++; } }
+        else { zip.push({name:OD+'/'+nm,data:jpg}); for(const p of who){ zip.push({name:`${PEOPLE_DIR}/${safe(p)}/${year}/${nm}`,data:jpg}); copies++; } }
+        if(b.back){ try{
+          const bj=withExif(new Uint8Array(await (await fileBlob(b.back.file)).arrayBuffer()),b.note?'Back: '+b.note:'',b.date), bn=nm.replace(/\.jpg$/,'_back.jpg');
+          if(canWrite){ await outWrite(OD+'/'+bn,bj); for(const p of who) await outWrite(`${PEOPLE_DIR}/${safe(p)}/${year}/${bn}`,bj); }
+          else { zip.push({name:OD+'/'+bn,data:bj}); for(const p of who) zip.push({name:`${PEOPLE_DIR}/${safe(p)}/${year}/${bn}`,data:bj}); }
+          nBack++;
+        }catch(e){ problems.push(`${nm} (back): ${e.message||e}`); } }
+        if(restoredOK(b)){ try{
+          // unturned restored files are copied as they are; turned ones are re-encoded the right way up
+          const turnK=(((b.rot||0)-(b.restored.rot||0))%4+4)%4;
+          let rbytes;
+          if(!turnK) rbytes=new Uint8Array(await (await fileBlob(restoredPath(b))).arrayBuffer());
+          else { const rc=await loadRestored(b); rbytes=new Uint8Array(await (await new Promise(r=>rc.toBlob(r,'image/jpeg',0.93))).arrayBuffer()); }
+          const rj=withExif(rbytes,b.note,b.date), rn=nm.replace(/\.jpg$/,'_restored.jpg');
+          if(canWrite){ await outWrite(OD+'/'+rn,rj); for(const p of who) await outWrite(`${PEOPLE_DIR}/${safe(p)}/${year}/${rn}`,rj); }
+          else { zip.push({name:OD+'/'+rn,data:rj}); for(const p of who) zip.push({name:`${PEOPLE_DIR}/${safe(p)}/${year}/${rn}`,data:rj}); }
+          nRestored++;
+        }catch(e){ problems.push(`${nm} (AI restored): ${e.message||e}`); } }
+        rows.push([(sub?sub+'/':'')+nm,(s.label?s.label+'/':'')+(s.file||s.name),b.date,{stamp:'Printed on photo',guess:'Estimated',user:'Entered'}[b.dateSrc]||'',b.note,who.join(', '),b.back?'yes':'']);
+        n++;
+      }
+    }
+    const csv='﻿'+rows.map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+    if(canWrite){
+      if(state.settings){ state.settings.madeDirs=[...made]; if(NATIVE) await saveSettings(); }
+      await outWrite(LIST_FILE,csv); await saveNow(); hideProg();
+      const where=outRoot()||state.dirPath||'the scan folder';
+      alert(`Export finished: ${where}\n· ${n} photos in “${OUT_DIR}”${made.size?`, in ${made.size} ${exLayout()==='decade'?'decade':'year'} folders`:''}${nRestored?`\n· ${nRestored} AI-restored versions`:''}${nBack?`\n· ${nBack} backs`:''}${problems.length?`\n\nThese could not be exported:\n${problems.slice(0,8).join('\n')}`:''}\n· ${copies} copies sorted by person in “${PEOPLE_DIR}”\n· a list in “${LIST_FILE}” (opens in Excel)`);
+    } else {
+      const enc=new TextEncoder();
+      zip.push({name:LIST_FILE,data:enc.encode(csv)},{name:DATA_FILE,data:enc.encode(JSON.stringify(serialize(),null,1))},{name:FACE_FILE,data:enc.encode(JSON.stringify(state.faces))});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(makeZip(zip)); a.download='Old Photo Scan.zip'; a.click(); hideProg();
+      alert('Downloaded as a zip. Put the two .json files from it back into the scan folder to continue next time.');
+    }
+  }catch(e){ hideProg(); alert('Export failed: '+e.message); }
+}
+$('exportBtn').onclick=()=>NATIVE?openExportDlg():runExport();
+
+
+/* EXIF: write the note as ImageDescription and the date as DateTimeOriginal so photo apps can read them */
+function withExif(jpg,note,date){
+  const enc=new TextEncoder(), p=parseDate(date);
+  const dt=p?`${p.y}:${String(p.m||1).padStart(2,'0')}:${String(p.d||1).padStart(2,'0')} 00:00:00`:null;
+  const asc=s=>{ const b=enc.encode(s); const o=new Uint8Array(b.length+1); o.set(b); return o; };
+  const ifd0=[], exif=[];
+  const desc=[note&&note.trim(), date&&('Date: '+date)].filter(Boolean).join('\n');
+  if(desc) ifd0.push({tag:0x010E,type:2,data:asc(desc)});
+  if(dt) ifd0.push({tag:0x0132,type:2,data:asc(dt)});
+  if(dt) exif.push({tag:0x9003,type:2,data:asc(dt)});
+  if(!ifd0.length) return jpg;
+  if(exif.length) ifd0.push({tag:0x8769,type:4,data:null});
+  const ifdLen=es=>2+12*es.length+4, dataLen=es=>es.reduce((a,e)=>a+(e.data&&e.data.length>4?e.data.length+(e.data.length&1):0),0);
+  const off0=8, data0=off0+ifdLen(ifd0), offE=data0+dataLen(ifd0), dataE=offE+(exif.length?ifdLen(exif):0);
+  const total=dataE+(exif.length?dataLen(exif):0);
+  const buf=new Uint8Array(total), v=new DataView(buf.buffer);
+  buf.set([0x49,0x49,0x2A,0x00]); v.setUint32(4,8,true);
+  function writeIfd(es,at,dataAt){
+    v.setUint16(at,es.length,true); let pos=at+2, dpos=dataAt;
+    for(const e of es){
+      v.setUint16(pos,e.tag,true); v.setUint16(pos+2,e.type,true);
+      if(e.tag===0x8769){ v.setUint32(pos+4,1,true); v.setUint32(pos+8,offE,true); }
+      else { v.setUint32(pos+4,e.data.length,true);
+        if(e.data.length<=4) buf.set(e.data,pos+8); else { v.setUint32(pos+8,dpos,true); buf.set(e.data,dpos); dpos+=e.data.length+(e.data.length&1); } }
+      pos+=12;
+    }
+    v.setUint32(pos,0,true);
+  }
+  writeIfd(ifd0,off0,data0); if(exif.length) writeIfd(exif,offE,dataE);
+  const head=enc.encode('Exif\0\0'), segLen=2+head.length+total;
+  const seg=new Uint8Array(4+head.length+total); seg[0]=0xFF; seg[1]=0xE1; seg[2]=segLen>>8; seg[3]=segLen&255; seg.set(head,4); seg.set(buf,4+head.length);
+  let at=2; if(jpg[2]===0xFF&&jpg[3]===0xE0) at=4+((jpg[4]<<8)|jpg[5]);
+  const out=new Uint8Array(jpg.length+seg.length); out.set(jpg.subarray(0,at)); out.set(seg,at); out.set(jpg.subarray(at),at+seg.length);
+  return out;
+}
+
+/* minimal ZIP writer (stored) for browsers that cannot write into the folder */
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(d){let c=0xFFFFFFFF;for(let i=0;i<d.length;i++)c=CRC[(c^d[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0;}
+function makeZip(files){
+  const enc=new TextEncoder(),parts=[],central=[];let off=0;
+  for(const f of files){const nm=enc.encode(f.name),crc=crc32(f.data),sz=f.data.length;
+    const h=new DataView(new ArrayBuffer(30));h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint32(14,crc,true);h.setUint32(18,sz,true);h.setUint32(22,sz,true);h.setUint16(26,nm.length,true);
+    parts.push(h,nm,f.data);
+    const c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint32(16,crc,true);c.setUint32(20,sz,true);c.setUint32(24,sz,true);c.setUint16(28,nm.length,true);c.setUint32(42,off,true);
+    central.push(c,nm);off+=30+nm.length+sz;}
+  const cs=central.reduce((a,p)=>a+p.byteLength,0),e=new DataView(new ArrayBuffer(22));
+  e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cs,true);e.setUint32(16,off,true);
+  return new Blob([...parts,...central,e],{type:'application/zip'});
+}
+</script>
+</body>
+</html>
