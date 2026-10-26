@@ -1,9 +1,9 @@
 {
- "version": "1.9.4",
+ "version": "1.9.5",
  "minShell": "1.4.0",
- "file": "ui/index-1.9.4.html",
- "sha256": "8363e99217236873f20a926dbd2819688d2e837975918296401be61dc889c487",
- "signature": "v2+n6rxU1lgofp4BOYZpP57lyrn6ngij0Nb5Lj5dP0eZvA62IXr0NHPq8vh7yhP5kG7QHLhTDYgudEOikwnfAg==",
- "notes": "Gallery: Backs filter finds photos that look like the back of a print; mark any photo as a back",
+ "file": "ui/index-1.9.5.html",
+ "sha256": "8c1234eee465956334b498e885700fe72e9bffd462adbcd27ad4f2c53653807d",
+ "signature": "AT4TL68zqjwV0UTymyPmGQsDawjumcOWkJhW537A+nMnQnB+7gADZlk8cSjidPltiNUiW2RzD8HVUpi04IJkCA==",
+ "notes": "Gallery: sort by newest or oldest scans",
  "date": "2026-10-26"
 }
