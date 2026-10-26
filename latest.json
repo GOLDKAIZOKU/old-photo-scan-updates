@@ -1,9 +1,9 @@
 {
- "version": "1.7.1",
+ "version": "1.7.2",
  "minShell": "1.4.0",
- "file": "ui/index-1.7.1.html",
- "sha256": "9876d3b659c291c15cc1537ef2f5c7a2e95adc243c01daefe662f6ff8a4b5efc",
- "signature": "XSSOSIQbzhnS6zATlwCr/UQhk6S4BNCAPvIWTy1ZCfmwv3qv3y0212gh1IOoKy2N3V+9TUAKvKKN6af7iEsXCQ==",
- "notes": "Export now sorts Cropped Photos into a folder for each year (or decade). Choose this in the Export window.",
+ "file": "ui/index-1.7.2.html",
+ "sha256": "92690377fb28c964e165df0ec2a3857dbc42a9fbeaff5e09c79e882ebd1e5fb1",
+ "signature": "RPS4H5aUnd1n5WPBSmqoO5nLLDQbpHeORPh7KLZP6r3n0Oe6oIYETgWxM2dqklvg9Y8SimqFjvm987DRHaxBAw==",
+ "notes": "Fix: AI-restored versions are exported again.",
  "date": "2026-10-26"
 }
