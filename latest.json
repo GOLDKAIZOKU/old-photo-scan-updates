@@ -1,9 +1,9 @@
 {
- "version": "2.6.0",
+ "version": "2.6.1",
  "minShell": "1.4.0",
- "file": "ui/index-2.6.0.html",
- "sha256": "911b7bfeb9ee6f009c7444b30d4b0436b56b6c9b8a13f97022d7caa03f6c83a3",
- "signature": "gQ0FjIpvOYun8hwyfNmbX2Dr7z0L3l9QNrBjehY4DIRZMWfOUqXDmBn2sCUkYv0dIlh2F7wboDheO1CEBOTuCg==",
- "notes": "Gallery: turn photos left/right by hand (buttons, right-click, R/L keys)",
+ "file": "ui/index-2.6.1.html",
+ "sha256": "b7c5abafb71cf66d8291885dcd964c97e2d6fe61a325ef81431b02c42ff78c7e",
+ "signature": "B++cHv4IJ3LAc5Bhfqxp7u9VERnNRKb3+qCkb41p1D88KKrmQnOOilCEebEKJWPTysLbDbYsvELSBY+rPidABg==",
+ "notes": "Photos with a back: separate Turn front / Turn back buttons",
  "date": "2026-10-27"
 }
