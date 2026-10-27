@@ -1,9 +1,9 @@
 {
- "version": "2.6.1",
+ "version": "2.6.2",
  "minShell": "1.4.0",
- "file": "ui/index-2.6.1.html",
- "sha256": "b7c5abafb71cf66d8291885dcd964c97e2d6fe61a325ef81431b02c42ff78c7e",
- "signature": "B++cHv4IJ3LAc5Bhfqxp7u9VERnNRKb3+qCkb41p1D88KKrmQnOOilCEebEKJWPTysLbDbYsvELSBY+rPidABg==",
- "notes": "Photos with a back: separate Turn front / Turn back buttons",
+ "file": "ui/index-2.6.2.html",
+ "sha256": "6d1888b5098e380e5ad35ada71b5bd0ef9dc4100fc204bb8dcbd6bd4c3148132",
+ "signature": "MKgMP6rRTmH1DP9A+g25ZN6J11zJimefQevcUqIUqBYWXB+O2BEqIFqgBCCKMjDxRfCEAW2N162Dzn5kXjHTDQ==",
+ "notes": "Finds pale photo backs that touch another photo",
  "date": "2026-10-27"
 }
