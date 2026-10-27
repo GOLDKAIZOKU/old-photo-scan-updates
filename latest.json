@@ -1,9 +1,9 @@
 {
- "version": "2.2.0",
+ "version": "2.3.0",
  "minShell": "1.4.0",
- "file": "ui/index-2.2.0.html",
- "sha256": "69bfb20b60b20d24cdc46d22ab4a32dcd198f788ecd050a18447920e5d017e56",
- "signature": "vIF2GumD1ejpKDPm62eszpqYabpJ1pqi6LzrMGV0+GsDpU4c5YRKsPsRhwJdJ1vL8kKKpHBFWPWh2q7A9wxJDA==",
- "notes": "Faces: click a face to see its photo; × to take it out; Undo; Scan all again; photos without scans are scanned too",
- "date": "2026-10-26"
+ "file": "ui/index-2.3.0.html",
+ "sha256": "10975a2392106fd8844b24b2aa4e6d7f6c45ec2e3b4519b25a7524b785ee156f",
+ "signature": "NLQ06OZVsgb9YiK4hQbLbDn/z2m22A+LCJN2/Dz+an82hOqpotsE0lsbcJ+2fHbGAL6RCbM+qrOujcDs2pxeAg==",
+ "notes": "Detection: finds large printed cards and pale photo backs that were missed or cut in half",
+ "date": "2026-10-27"
 }
