@@ -1,9 +1,9 @@
 {
- "version": "2.5.0",
+ "version": "2.5.1",
  "minShell": "1.4.0",
- "file": "ui/index-2.5.0.html",
- "sha256": "003bbf5c2d8859f7c74536f0afcf1b1e543b0a462ca6c7e5460cf3fa485b7268",
- "signature": "UBXXWmKlKlqBh41uqsOSM2l7RhE7pvbXwExileBbbBesxTJ3v3O4dYPi5Gi90iOtTOalYchFFcdW64PGPFwICw==",
- "notes": "After export, finished scans are moved to the Trash (needs app 1.6)",
+ "file": "ui/index-2.5.1.html",
+ "sha256": "a2af1ba36cf1956c6040744fea0e100b713bba042446d02d3ba3a23baac9b0b7",
+ "signature": "7Tg4WmcrqadThPeDe8V/i0eK1RskAdfej7qY395szEo0pKCFNTBAardllrY6nMTz9Cp9TnlHVP4tBRnQSDZGBA==",
+ "notes": "After export, finished scans are deleted (needs app 1.6)",
  "date": "2026-10-27"
 }
