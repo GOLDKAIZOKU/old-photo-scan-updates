@@ -1,9 +1,9 @@
 {
- "version": "2.4.0",
+ "version": "2.5.0",
  "minShell": "1.4.0",
- "file": "ui/index-2.4.0.html",
- "sha256": "f960e813b3ae56d68431d7972845a7591fb7b66ea03222c4ebee0302377f1cf2",
- "signature": "9CAlJa3spRI4uMir+gG7F9jJjzi4Urio1FA9gl5zDrXcR5bg9H31Eu/+URUHOuVaKA2+qQcr49SCDKwRHKg5DA==",
- "notes": "Big photo view: zoom with mouse wheel, double-click or + − buttons; drag to move",
+ "file": "ui/index-2.5.0.html",
+ "sha256": "003bbf5c2d8859f7c74536f0afcf1b1e543b0a462ca6c7e5460cf3fa485b7268",
+ "signature": "UBXXWmKlKlqBh41uqsOSM2l7RhE7pvbXwExileBbbBesxTJ3v3O4dYPi5Gi90iOtTOalYchFFcdW64PGPFwICw==",
+ "notes": "After export, finished scans are moved to the Trash (needs app 1.6)",
  "date": "2026-10-27"
 }
