@@ -1,9 +1,9 @@
 {
- "version": "2.5.1",
+ "version": "2.6.0",
  "minShell": "1.4.0",
- "file": "ui/index-2.5.1.html",
- "sha256": "a2af1ba36cf1956c6040744fea0e100b713bba042446d02d3ba3a23baac9b0b7",
- "signature": "7Tg4WmcrqadThPeDe8V/i0eK1RskAdfej7qY395szEo0pKCFNTBAardllrY6nMTz9Cp9TnlHVP4tBRnQSDZGBA==",
- "notes": "After export, finished scans are deleted (needs app 1.6)",
+ "file": "ui/index-2.6.0.html",
+ "sha256": "911b7bfeb9ee6f009c7444b30d4b0436b56b6c9b8a13f97022d7caa03f6c83a3",
+ "signature": "gQ0FjIpvOYun8hwyfNmbX2Dr7z0L3l9QNrBjehY4DIRZMWfOUqXDmBn2sCUkYv0dIlh2F7wboDheO1CEBOTuCg==",
+ "notes": "Gallery: turn photos left/right by hand (buttons, right-click, R/L keys)",
  "date": "2026-10-27"
 }
