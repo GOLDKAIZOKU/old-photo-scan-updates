@@ -1,9 +1,9 @@
 {
- "version": "2.6.2",
+ "version": "2.6.3",
  "minShell": "1.4.0",
- "file": "ui/index-2.6.2.html",
- "sha256": "6d1888b5098e380e5ad35ada71b5bd0ef9dc4100fc204bb8dcbd6bd4c3148132",
- "signature": "MKgMP6rRTmH1DP9A+g25ZN6J11zJimefQevcUqIUqBYWXB+O2BEqIFqgBCCKMjDxRfCEAW2N162Dzn5kXjHTDQ==",
- "notes": "Finds pale photo backs that touch another photo",
- "date": "2026-10-27"
+ "file": "ui/index-2.6.3.html",
+ "sha256": "8a4bfe629a1e0a965258ee86d0d1eb43e2823b784c9c408508601d4df6ef31c9",
+ "signature": "BH4I2eZbCDbHazU3cjvVl3yqDiMiPQu+FpDLaTe79Jat7yYp9uWUoGeSCBWHzJ1VtGaOPJHSUNIRYTfWJwDlBQ==",
+ "notes": "New scans show up by themselves within 10 seconds; Crop/Dates tabs explain when there is nothing to show",
+ "date": "2026-10-28"
 }
