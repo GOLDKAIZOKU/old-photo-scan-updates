@@ -1,9 +1,9 @@
 {
- "version": "2.7.0",
+ "version": "2.8.0",
  "minShell": "1.4.0",
- "file": "ui/index-2.7.0.html",
- "sha256": "95832145b017c46a89089ee068e94b89e9a427fc246818f20944ae83b8330bfc",
- "signature": "+uU4s2wR2Wl0GqmBphqImB8NUzNogu7NiI1rq7g3YlqvylLlXpoK9R8F15TI0gmH4IViK9v7qifUdMJo1h0pAQ==",
- "notes": "Gallery: join several photos as a booklet (pages), view all pages, turn pages, separate again",
+ "file": "ui/index-2.8.0.html",
+ "sha256": "fc9b2a70a84a5fffe9e09227538031bc6d7394ea879039c52963d052ad657757",
+ "signature": "QMZG8gMk3/2OMtvQe8Cbg4VH+GhnND9poFniXS7VZ12fxMOHyTiIu0kbWOl5la8S26ln3smxIOs3r9B1Z4byBA==",
+ "notes": "Front+back and booklets: save all sides as one image or as a PDF",
  "date": "2026-10-28"
 }
