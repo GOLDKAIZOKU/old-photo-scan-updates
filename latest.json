@@ -1,9 +1,9 @@
 {
- "version": "2.6.3",
+ "version": "2.7.0",
  "minShell": "1.4.0",
- "file": "ui/index-2.6.3.html",
- "sha256": "8a4bfe629a1e0a965258ee86d0d1eb43e2823b784c9c408508601d4df6ef31c9",
- "signature": "BH4I2eZbCDbHazU3cjvVl3yqDiMiPQu+FpDLaTe79Jat7yYp9uWUoGeSCBWHzJ1VtGaOPJHSUNIRYTfWJwDlBQ==",
- "notes": "New scans show up by themselves within 10 seconds; Crop/Dates tabs explain when there is nothing to show",
+ "file": "ui/index-2.7.0.html",
+ "sha256": "95832145b017c46a89089ee068e94b89e9a427fc246818f20944ae83b8330bfc",
+ "signature": "+uU4s2wR2Wl0GqmBphqImB8NUzNogu7NiI1rq7g3YlqvylLlXpoK9R8F15TI0gmH4IViK9v7qifUdMJo1h0pAQ==",
+ "notes": "Gallery: join several photos as a booklet (pages), view all pages, turn pages, separate again",
  "date": "2026-10-28"
 }
