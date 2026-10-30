@@ -1,9 +1,9 @@
 {
- "version": "2.8.1",
+ "version": "2.9.0",
  "minShell": "1.4.0",
- "file": "ui/index-2.8.1.html",
- "sha256": "3625268006c59c2eb948b15f6c9672a6100106863da1194b52c81561fda39b45",
- "signature": "BhYkaU6cz2L+OJ7nl+VUXMVSLT7LFZi8WfDXiD6pOIb4c0zXsYaDAk/MdyYuuiNki0e9ffus02yzJy5GCIlpDg==",
- "notes": "Detection: pale photo backs laid close together are split into separate photos",
- "date": "2026-10-28"
+ "file": "ui/index-2.9.0.html",
+ "sha256": "4a48d0ff8be606ef9e55261a4e8be61022936a97bfca68cbd17957da16125986",
+ "signature": "9Lz3v5NIs2EvVPzJfZMH27vPHdPT9ZLP66PpbGUTt6WiGiF4W+728Z8dPNd1Q4x2U0D35ee1QJFIOMk1fla3Bw==",
+ "notes": "合照显示人名和当时年龄",
+ "date": "2026-10-30"
 }
