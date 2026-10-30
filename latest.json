@@ -1,9 +1,9 @@
 {
- "version": "2.9.0",
+ "version": "2.9.1",
  "minShell": "1.4.0",
- "file": "ui/index-2.9.0.html",
- "sha256": "4a48d0ff8be606ef9e55261a4e8be61022936a97bfca68cbd17957da16125986",
- "signature": "9Lz3v5NIs2EvVPzJfZMH27vPHdPT9ZLP66PpbGUTt6WiGiF4W+728Z8dPNd1Q4x2U0D35ee1QJFIOMk1fla3Bw==",
- "notes": "合照显示人名和当时年龄",
+ "file": "ui/index-2.9.1.html",
+ "sha256": "b51a73a9b25fe85e03ccd0003831025c90738069d037b5305d333eff820cfd40",
+ "signature": "phCYENSbSMcg5oR+Oza+1asz4yo0/C1BXGO8Ik9dAkcPd6I4kQ4CpAUHu8agx3xP30WXFqn28rgPHXf7ziG3Ag==",
+ "notes": "点脸就能写名字",
  "date": "2026-10-30"
 }
