@@ -1,9 +1,9 @@
 {
- "version": "2.9.1",
+ "version": "2.9.2",
  "minShell": "1.4.0",
- "file": "ui/index-2.9.1.html",
- "sha256": "b51a73a9b25fe85e03ccd0003831025c90738069d037b5305d333eff820cfd40",
- "signature": "phCYENSbSMcg5oR+Oza+1asz4yo0/C1BXGO8Ik9dAkcPd6I4kQ4CpAUHu8agx3xP30WXFqn28rgPHXf7ziG3Ag==",
- "notes": "点脸就能写名字",
- "date": "2026-10-30"
+ "file": "ui/index-2.9.2.html",
+ "sha256": "3a78fa82b1e1c15b7a969e59501807f1c2eafdb4a3046d779a99c6b97f6d6770",
+ "signature": "exJoFKhnbcirevZAcDWo3WZCqGEiP49Hez+NV/tK3bwGpBIUJYfVwebqNR+2lpdgToL622R4xTzgQ1BGqIDgCw==",
+ "notes": "照片分类",
+ "date": "2026-10-31"
 }
